@@ -1,0 +1,11 @@
+name: Lands
+version: ${project.version}
+main: fr.iban.lands.LandsPlugin
+api-version: 1.16
+authors: [ Iban ]
+description: Plugin de protections
+depend: [Core, QuickShop]
+
+commands:
+  land:
+  lands:
