@@ -99,13 +99,22 @@ public class LandMap {
 
 		Land land = manager.getLandAt(schunk);
 
-
-		if(land == null){
-			hoverbase.append(new ComponentBuilder("Propriétaire : Aucun").create());
-			if(selectedLand != null) {
-				hoverbase.append(clicToClaim.create()).color(ChatColor.GRAY).create();
-				builder.event(new ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/land claimat " + schunk.getWorld() + " " + schunk.getX() + " " + schunk.getZ()));
-			}
+		if(land instanceof SystemLand){
+				SystemLand sland = (SystemLand)land;
+				hoverbase.append(new ComponentBuilder(sland.getName()).bold(true).color(HexColor.MARRON.getColor()).create());
+				if(land.getName().equals("Zone sauvage")) {
+					if(selectedLand != null) {
+						hoverbase.append(clicToClaim.create()).color(ChatColor.GRAY).create();
+						builder.event(new ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/land claimat " + schunk.getWorld() + " " + schunk.getX() + " " + schunk.getZ()));
+					}
+				}else {
+					builder.color(HexColor.OLIVE.getColor());
+					if(!sland.equals(selectedLand)) {
+						builder.event(new ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, ""));
+					}else {
+						builder.event(new ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/land unclaimat " + schunk.getWorld() + " " + schunk.getX() + " " + schunk.getZ()));
+					}
+				}
 		}else if(land instanceof PlayerLand) {
 			PlayerLand pland = (PlayerLand)land;
 			if(pland.getOwner().equals(player.getUniqueId())) {
@@ -118,15 +127,6 @@ public class LandMap {
 			}else {
 				builder.color(HexColor.MARRON.getColor());
 				hoverbase.append(new ComponentBuilder("Territoire : " + pland.getName() + "\n").color(HexColor.MARRON.getColor()).append(TextComponent.fromLegacyText("Propriétaire : " + Bukkit.getOfflinePlayer(pland.getOwner()).getName())).color(HexColor.MARRON.getColor()).create());
-			}
-		}if(land instanceof SystemLand){
-			SystemLand sland = (SystemLand)land;
-			hoverbase.append(new ComponentBuilder(sland.getName()).bold(true).color(ChatColor.DARK_GRAY).create());
-			builder.color(HexColor.OLIVE.getColor());
-			if(!sland.equals(selectedLand)) {
-				builder.event(new ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, ""));
-			}else {
-				builder.event(new ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/land unclaimat " + schunk.getWorld() + " " + schunk.getX() + " " + schunk.getZ()));
 			}
 		}
 		if(center.getX() == schunk.getX() && center.getZ() == schunk.getZ()) {

@@ -1,9 +1,7 @@
 package fr.iban.lands;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -14,12 +12,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.common.data.AccountProvider;
@@ -31,6 +33,7 @@ import fr.iban.lands.objects.PlayerLand;
 import fr.iban.lands.objects.SChunk;
 import fr.iban.lands.objects.SystemLand;
 import fr.iban.lands.storage.AbstractStorage;
+import fr.iban.lands.utils.ChunkUtils;
 import fr.iban.lands.utils.LandMap;
 
 public class LandManager {
@@ -39,9 +42,10 @@ public class LandManager {
 	private boolean loaded = false;
 
 	private Map<Integer, Land> lands = new ConcurrentHashMap<>();
-	private Map<SChunk, Integer> chunks = new ConcurrentHashMap<>();
+	private Map<String, Land> chunks = new ConcurrentHashMap<>();
 	private LandMap landMap;
 	private LandsPlugin plugin;
+	private Land wilderness;
 
 	public LandManager(LandsPlugin plugin, AbstractStorage storage) {
 		this.storage = storage;
@@ -58,8 +62,22 @@ public class LandManager {
 		Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
 			plugin.getLogger().log(Level.INFO, "Chargement des lands...");
 			getLands().putAll(storage.getLands());
+			getSystemLand("Zone sauvage").thenAccept(wild -> {
+				if(wild == null) {
+					createWilderness().thenAccept(land -> {
+						wilderness = land;
+					});
+				}else {
+					wilderness = wild;
+				}
+			});
 			plugin.getLogger().log(Level.INFO, "Chargement des chunks...");
-			getChunks().putAll(storage.getChunks());
+			Map<String, Integer> savedchunks = storage.getChunks();
+			for(Entry<String, Integer> entry : savedchunks.entrySet()) {
+				getChunks().put(entry.getKey(), getLands().get(entry.getValue()));
+			}
+			plugin.getLogger().log(Level.INFO, getChunks().size() + " chunks chargées");
+
 			plugin.getLogger().log(Level.INFO, "Chargement des liens...");
 			storage.loadLinks(this);
 			setLoaded(true);
@@ -143,6 +161,10 @@ public class LandManager {
 			return null;
 		});
 	}
+	
+	public boolean isWilderness(Land land) {
+		return land instanceof SystemLand && land.getName().equals("Zone sauvage");
+	}
 
 	//Retourne le territoire du nom donné pour le joueur donné.
 	public CompletableFuture<PlayerLand> getPlayerFirstLand(Player player) {
@@ -211,6 +233,17 @@ public class LandManager {
 			return land;
 		});
 	}
+	
+	public CompletableFuture<SystemLand> createWilderness() {
+		return future(() -> {
+			SystemLand land = new SystemLand(-1, "Zone sauvage");
+			storage.addSystemLand(land);
+			getLands().put(-1, land);
+			land.setBans(new HashSet<>());
+			land.setFlags(new HashSet<>());
+			return land;
+		});
+	}
 
 	/*
 	 * Permet de créer un nouveau territoire.
@@ -238,6 +271,10 @@ public class LandManager {
 				player.sendMessage("§cVous n'avez pas de territoire à ce nom.");
 			}
 			storage.deleteLand(l);
+			getChunks(l).forEach(schunk -> {
+				getChunks().remove(schunk);
+				chunksCache.invalidate(schunk);
+			});
 			getLands().remove(l.getId());
 			player.sendMessage("§cLe territoire au nom de " + name + " a bien été supprimée.");
 		});
@@ -252,6 +289,10 @@ public class LandManager {
 				player.sendMessage("§cIl n'y a pas de territoire à ce nom.");
 			}
 			storage.deleteLand(l);
+			getChunks(l).forEach(schunk -> {
+				getChunks().remove(schunk);
+				chunksCache.invalidate(schunk);
+			});
 			getLands().remove(l.getId());
 			player.sendMessage("§cLe territoire au nom de " + name + " a bien été supprimée.");
 		});
@@ -284,10 +325,7 @@ public class LandManager {
 	 * Retourne le nombre de chunks détenus par un joueur.
 	 */
 	public CompletableFuture<Integer> getChunkCount(Player player) {
-		return future(() -> {
-			//Bukkit.broadcastMessage("" + storage.getChunkCount(player.getUniqueId()));
-			return storage.getChunkCount(player.getUniqueId());
-		});
+		return future(() -> storage.getChunkCount(player.getUniqueId()));
 	}
 
 	public int getMaxChunkCount(Player player) {
@@ -306,20 +344,20 @@ public class LandManager {
 	/*
 	 * Retourne la liste des chunks d'un territoire.
 	 */
-	public Collection<SChunk> getChunks(Land region) {
-		Set<SChunk> chunks = new HashSet<>();
-		for(Entry<SChunk, Integer> entry : getChunks().entrySet()) {
-			if(entry.getValue().intValue() == region.getId()) {
-				chunks.add(entry.getKey());
+	public Collection<String> getChunks(Land land) {
+		Set<String> chunksSet = new HashSet<>();
+		for(Entry<String, Land> entry : getChunks().entrySet()) {
+			if(land.equals(entry.getValue())) {
+				chunksSet.add(entry.getKey());
 			}
 		}
-		return chunks;
+		return chunksSet;
 	}
 
 	/*
 	 * Retourne tous les chunks claim du serveur.
 	 */
-	public Map<SChunk, Integer> getChunks() {
+	public Map<String, Land> getChunks() {
 		return chunks;
 	}
 
@@ -355,34 +393,17 @@ public class LandManager {
 	 * CLAIM / UNCLAIM
 	 */
 
-	private LinkedHashMap<SChunk, Land> lastAccessedChunks = new LinkedHashMap<>();
-
-	private void addLastAccessed(SChunk schunk, Land land) {
-		lastAccessedChunks.put(schunk, land);
-		if(lastAccessedChunks.size() > 5) {
-			lastAccessedChunks.remove(lastAccessedChunks.keySet().iterator().next());
-		}
-	}
+	private Cache<String, Land> chunksCache = Caffeine.newBuilder()
+			.expireAfterAccess(10, TimeUnit.MINUTES)
+			.maximumSize(1000)
+			.build();
 
 	public Land getLandAt(Chunk chunk) {
-		for(Entry<SChunk, Land> entry : lastAccessedChunks.entrySet()) {
-			if(entry.getKey().equalsChunk(chunk)) {
-				addLastAccessed(entry.getKey(), entry.getValue());
-				return entry.getValue();
-			}
-		}
-		for(Entry<SChunk, Integer> entry : getChunks().entrySet()) {
-			if(entry.getKey().equalsChunk(chunk)) {
-				Land land = getLands().get(entry.getValue());
-				addLastAccessed(entry.getKey(), land);
-				return land;
-			}
-		}
-		return null;
+		return chunksCache.get(ChunkUtils.serialize(chunk), land -> getChunks().getOrDefault(ChunkUtils.serialize(chunk), wilderness));
 	}
 
 	public Land getLandAt(SChunk schunk) {
-		return getLandAt(schunk.getChunk());
+		return chunksCache.get(schunk.toString(), land -> getChunks().getOrDefault(schunk.toString(), wilderness));
 	}
 
 
@@ -400,7 +421,8 @@ public class LandManager {
 	 * Ajouter un chunk à un territoire :
 	 */
 	public void claim(SChunk chunk, Land land) {
-		getChunks().put(chunk, land.getId());
+		getChunks().put(chunk.toString(), land);
+		chunksCache.invalidate(chunk.toString());
 		future(() -> storage.setChunk(land, chunk));
 	}
 
@@ -420,7 +442,7 @@ public class LandManager {
 				return;
 			}
 
-			if(getLandAt(chunk) == null) {
+			if(getLandAt(chunk).equals(wilderness)) {
 				claim(chunk, land);
 				if(verbose) {
 					player.sendActionBar("§a§lLe tronçon a bien été claim.");
@@ -431,59 +453,57 @@ public class LandManager {
 		});
 	}
 
-	public void unclaim(Player player, Chunk chunk, boolean verbose) {
-		Land land = getLandAt(chunk);
-		if(land instanceof PlayerLand) {
-			PlayerLand pland = (PlayerLand) land;
-			if(pland.getOwner().equals(player.getUniqueId()) || plugin.isBypassing(player)) {
-				unclaim(chunk);
-				if(verbose) {
-					player.sendActionBar("§a§lLe tronçon a bien été unclaim.");
+	public CompletableFuture<Void> unclaim(Player player, Chunk chunk, boolean verbose) {
+		return future(() -> {
+			Land land = getLandAt(chunk);
+			if(land instanceof PlayerLand) {
+				PlayerLand pland = (PlayerLand) land;
+				if(pland.getOwner().equals(player.getUniqueId()) || plugin.isBypassing(player)) {
+					unclaim(chunk);
+					if(verbose) {
+						player.sendActionBar("§a§lLe tronçon a bien été unclaim.");
+					}
+				}else if(verbose){
+					player.sendActionBar("§c§lCe tronçon ne vous appartient pas !");
 				}
 			}else if(verbose){
-				player.sendActionBar("§c§lCe tronçon ne vous appartient pas !");
+				player.sendActionBar("§c§lImpossible d'unclaim ce tronçon.");
 			}
-		}else if(verbose){
-			player.sendActionBar("§c§lImpossible d'unclaim ce tronçon.");
-		}
+		});
 	}
 
-	public void unclaim(Player player, Chunk chunk, Land land, boolean verbose) {
-		Land l = getLandAt(chunk);
-		if(l == null) {
-			if(verbose)
-				player.sendActionBar("§c§lCe tronçon n'est pas claim !");
-			return;
-		}
-
-		if(l.equals(land)) {
-			unclaim(player, chunk, true);
-		}else if(verbose){
-			player.sendActionBar("§c§lImpossible d'unclaim ce tronçon, il n'appartient pas au territoire " + land.getName());
-		}
-	}
-
-	public void unclaim(Chunk chunk) {
-		Land land = getLandAt(chunk);
-		if(land == null) {
-			return;
-		}
-		for(SChunk schunk : chunks.keySet()) {
-			if(schunk.equalsChunk(chunk)) {
-				chunks.remove(schunk);
-				break;
+	public CompletableFuture<Void> unclaim(Player player, Chunk chunk, Land land, boolean verbose) {
+		return future(() -> {
+			Land l = getLandAt(chunk);
+			if(l == null) {
+				if(verbose)
+					player.sendActionBar("§c§lCe tronçon n'est pas claim !");
+				return;
 			}
-		}
-		future(() -> storage.removeChunk(getSChunkFromChunk(chunk)));
+
+			if(l.equals(land)) {
+				unclaim(player, chunk, true);
+			}else if(verbose){
+				player.sendActionBar("§c§lImpossible d'unclaim ce tronçon, il n'appartient pas au territoire " + land.getName());
+			}
+		});
 	}
 
-	public void unclaim(SChunk schunk) {
-		Land land = getLandAt(schunk);
-		if(land == null) {
-			return;
-		}
-		chunks.remove(schunk);
-		future(() -> storage.removeChunk(schunk));
+	public CompletableFuture<Void> unclaim(Chunk chunk) {
+		return unclaim(getSChunkFromChunk(chunk));
+	}
+
+	public CompletableFuture<Void> unclaim(SChunk schunk) {
+		return future(() -> {
+			Land land = getLandAt(schunk);
+			if(land == null) {
+				return;
+			}
+			String chunkstring = schunk.toString();
+			chunks.remove(chunkstring);
+			chunksCache.invalidate(chunkstring);
+			storage.removeChunk(schunk);
+		});
 	}
 
 	/*
@@ -523,6 +543,13 @@ public class LandManager {
 
 		Player player = Bukkit.getPlayer(uuid);
 		if(player != null) {
+			Land landat = getLandAt(player.getChunk());
+			if(landat instanceof PlayerLand) {
+				PlayerLand pland = (PlayerLand)land;
+				if(pland.getOwner().equals(sender.getUniqueId())) {
+					player.teleportAsync(Bukkit.getWorld("world").getSpawnLocation());
+				}
+			}
 			player.sendMessage("§aVous avez été banni du territoire " + land.getName() + " par " + sender.getName() + ".");
 		}
 	}

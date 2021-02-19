@@ -9,13 +9,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 
 import javax.sql.DataSource;
 
-import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.common.data.sql.DbAccess;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.enums.Action;
@@ -31,49 +27,16 @@ public class Storage implements AbstractStorage {
 
 	private DataSource ds = DbAccess.getDataSource();
 
-	//	private LandsPlugin plugin;
-	//	
-	//	public Storage(LandsPlugin plugin) {
-	//		this.plugin = plugin;
-	//	}
 
 	@Override
-	public <T> CompletableFuture<T> future(Callable<T> supplier) {
-		return CompletableFuture.supplyAsync(() -> {
-			try {
-				return supplier.call();
-			} catch (Exception e) {
-				if (e instanceof RuntimeException) {
-					throw (RuntimeException) e;
-				}
-				throw new CompletionException(e);
-			}
-		});
-	}
-
-	@Override
-	public CompletableFuture<Void> future(Runnable runnable) {
-		return CompletableFuture.runAsync(() -> {
-			try {
-				runnable.run();
-			} catch (Exception e) {
-				if (e instanceof RuntimeException) {
-					throw (RuntimeException) e;
-				}
-				throw new CompletionException(e);
-			}
-		});
-	}
-
-	@Override
-	public Map<SChunk, Integer> getChunks() {
-		Map<SChunk, Integer> chunks = new HashMap<>();
+	public Map<String, Integer> getChunks() {
+		Map<String, Integer> chunks = new HashMap<>();
 
 		try(Connection connection = ds.getConnection()){
 			try(PreparedStatement ps = connection.prepareStatement(
 					"SELECT * " +
-					"FROM sc_chunks WHERE server LIKE ?;")){
-				ps.setString(1, CoreBukkitPlugin.getInstance().getServerName());
+					"FROM sc_chunks;")){
+				//ps.setString(1, CoreBukkitPlugin.getInstance().getServerName());
 				try(ResultSet rs = ps.executeQuery()){
 					while(rs.next()) {
 						int id = rs.getInt("idL");
@@ -81,7 +44,7 @@ public class Storage implements AbstractStorage {
 						String world = rs.getString("world");
 						int x = rs.getInt("x");
 						int z = rs.getInt("z");
-						chunks.put(new SChunk(server, world, x, z), id);
+						chunks.put(new SChunk(server, world, x, z).toString(), id);
 					}
 				}
 			}
@@ -434,7 +397,7 @@ public class Storage implements AbstractStorage {
 
 	@Override
 	public int getChunkCount(UUID uuid) {
-		String sql = "SELECT COUNT(*) FROM sc_chunks WHERE idL=(SELECT DISTINCT idL FROM sc_lands WHERE uuid LIKE ? LIMIT 1);";
+		String sql = "SELECT COUNT(*) FROM sc_chunks WHERE idL IN (SELECT DISTINCT idL FROM sc_lands WHERE uuid LIKE ?);";
 		int count = 0;
 		try(Connection connection = ds.getConnection()){
 			try(PreparedStatement ps = connection.prepareStatement(sql)){

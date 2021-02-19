@@ -3,8 +3,6 @@ package fr.iban.lands.storage;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
 
 import fr.iban.lands.LandManager;
 import fr.iban.lands.enums.Action;
@@ -18,7 +16,7 @@ import fr.iban.lands.objects.SystemLand;
 
 public interface AbstractStorage {
 		
-	Map<SChunk, Integer> getChunks();
+	Map<String, Integer> getChunks();
 	
 	Map<SChunk, Integer> getChunks(UUID uuid);
 	
@@ -72,20 +70,4 @@ public interface AbstractStorage {
 	
 	void removeLink(Land land, Link link);
 	
-	/*
-	 * ASYNC :
-	 */
-	
-	<T> CompletableFuture<T> future(Callable<T> supplier);
-	
-	CompletableFuture<Void> future(Runnable runnable);
-	
-	default CompletableFuture<Map<SChunk, Integer>> getChunksAsync() {
-		return future(() -> getChunks());
-	}
-	
-	default CompletableFuture<Map<Integer, Land>> getLandsAsync() {
-		return future(() -> getLands());
-	}
-
 }

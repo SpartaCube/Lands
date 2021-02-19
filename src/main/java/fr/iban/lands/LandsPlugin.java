@@ -12,6 +12,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import fr.iban.lands.commands.LandCMD;
 import fr.iban.lands.commands.LandsCMD;
+import fr.iban.lands.commands.MaxClaimsCMD;
 import fr.iban.lands.listeners.BlockBreakListener;
 import fr.iban.lands.listeners.BlockPlaceListener;
 import fr.iban.lands.listeners.CommandListener;
@@ -52,6 +53,10 @@ public final class LandsPlugin extends JavaPlugin {
 		
 		getCommand("lands").setExecutor(new LandsCMD(this));
 		getCommand("lands").setTabCompleter(new LandsCMD(this));
+		
+		getCommand("addmaxclaim").setExecutor(new MaxClaimsCMD());
+		getCommand("removemaxclaim").setExecutor(new MaxClaimsCMD());
+		getCommand("getmaxclaim").setExecutor(new MaxClaimsCMD());
 		
 		registerListeners(
 				new PlayerMoveListener(this),

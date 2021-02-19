@@ -143,8 +143,8 @@ public class LandMainMenu extends PaginatedMenu {
 	private ItemStack getLandItem(Land land) {
 		return new ItemBuilder(Head.GRASS.get())
 				.setDisplayName("§2" + land.getName())
-				.addLore("§aClic droit pour gérer ce territoire.")
-				.addLore("§cClic gauche pour supprimer ce territoire.")
+				.addLore("§aClic gauche pour gérer ce territoire.")
+				.addLore("§cClic droit pour supprimer ce territoire.")
 				.addLore("")
 				.addLore("§fTronçons : " + manager.getChunks(land).size())
 				.addLore("§fJoueurs trust : " + land.getTrusts().size())

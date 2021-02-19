@@ -9,3 +9,6 @@ depend: [Core, QuickShop]
 commands:
   land:
   lands:
+  addmaxclaim:
+  removemaxclaim:
+  getmaxclaim:

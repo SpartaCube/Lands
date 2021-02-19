@@ -72,7 +72,7 @@ public class AreaSelector {
 						for(Chunk chunk : getCuboid().getChunks()) {
 							manager.claim(player, chunk, land, false);
 						}
-						player.sendMessage("§aLa selection a été claim avec succès.");
+						player.sendMessage("§a§lLa selection a été claim avec succès.");
 					}
 				});
 			}else if(texte.equalsIgnoreCase("unclaim")){
@@ -90,9 +90,9 @@ public class AreaSelector {
 					for(Chunk chunk : getCuboid().getChunks()) {
 						manager.unclaim(chunk);
 					}
-					player.sendMessage("§aLa selection a été unclaim avec succès.");
+					player.sendMessage("§a§lLa selection a été unclaim avec succès.");
 				}else {
-					player.sendMessage("§cIl faut définir les deux positions !");
+					player.sendMessage("§c§lIl faut définir les deux positions !");
 				}
 			}else if(texte.startsWith("quit")){
 				callback.quit();
@@ -162,9 +162,9 @@ public class AreaSelector {
 			int claimCount = 0;
 			for(Chunk chunk : cuboid.getChunks()) {
 				Land chunkLand = manager.getLandAt(chunk);
-				if(chunkLand != null) {
+				if(!manager.isWilderness(chunkLand)) {
 					if(!manager.getLandAt(chunk).equals(land)) {
-						player.sendMessage("§cLa selection contient des tronçons qui ne sont pas vides et n'appartiennent pas au territoire " + land.getName() + ".");
+						player.sendMessage("§c§lLa selection contient des tronçons qui ne sont pas vides et n'appartiennent pas au territoire " + land.getName() + ".");
 						return false;
 					}else {
 						unclaimCount++;
@@ -175,19 +175,19 @@ public class AreaSelector {
 			}
 			if(claim) {
 				if(claimCount == 0) {
-					player.sendMessage("§cIl n'y a pas de tronçons à claim dans la selection.");
+					player.sendMessage("§c§lIl n'y a pas de tronçons à claim dans la selection.");
 					return false;
 				}
 
 				int remaining = manager.getRemainingChunkCount(player).get();
 				if(claimCount > remaining) {
-					player.sendMessage("§cVous essayez de claim " + claimCount + " tronçons alors qu'il ne vous en reste que " + remaining + " de libre.");
+					player.sendMessage("§c§lVous essayez de claim " + claimCount + " tronçons alors qu'il ne vous en reste que " + remaining + " de libre.");
 					return false;
 				}
 
 			}else {
 				if(unclaimCount == 0) {
-					player.sendMessage("§cIl n'y a pas de tronçons à unclaim dans la selection.");
+					player.sendMessage("§c§lIl n'y a pas de tronçons à unclaim dans la selection.");
 					return false;
 				}
 			}

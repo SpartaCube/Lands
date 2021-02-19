@@ -59,7 +59,10 @@ public class PlayerMoveListener implements Listener {
 
 			if(lfrom == null && lto == null) return;
 
-			if(lto != null && lfrom != lto) {
+			if(landmanager.isWilderness(lfrom) && landmanager.isWilderness(lto)) return;
+
+			
+			if(lto != null && lfrom != lto && !landmanager.isWilderness(lto)) {
 				if(lto.isBanned(player.getUniqueId()) && !plugin.isBypassing(player)) {
 					Bukkit.getScheduler().runTask(plugin, () -> {
 						player.teleportAsync(from);
@@ -78,7 +81,7 @@ public class PlayerMoveListener implements Listener {
 				}else {
 					player.sendActionBar("§8≫ " + HexColor.OLIVE.getColor() + "§lVous entrez dans le territoire " + lto.getName());
 				}
-			}else if(lfrom != null && lto == null) {
+			}else if(lfrom != null && landmanager.isWilderness(lto)) {
 				if(lfrom instanceof PlayerLand) {
 					PlayerLand pland = (PlayerLand)lfrom;
 					if(player.getUniqueId().equals(pland.getOwner())) {

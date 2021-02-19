@@ -20,7 +20,6 @@ public class PistonListeners implements Listener {
 	
 	@EventHandler
 	public void onPiston(BlockPistonExtendEvent e) {
-
 		Land pistonLand= landmanager.getLandAt(e.getBlock().getChunk());
 
 		for(Block block : e.getBlocks()) {

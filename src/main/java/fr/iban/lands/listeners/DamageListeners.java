@@ -3,6 +3,7 @@ package fr.iban.lands.listeners;
 import java.util.Set;
 
 import org.bukkit.entity.Arrow;
+import org.bukkit.entity.EnderPearl;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
@@ -56,8 +57,13 @@ public class DamageListeners implements Listener {
 			if(player != null) {
 				if(!mobs.contains(e.getEntityType()) && !land.isBypassing(player, Action.PASSIVE_KILL)) {
 					e.setCancelled(true);
+					return;
 				}
 				if(e.getEntity().getCustomName() != null && !land.isBypassing(player, Action.TAGGED_KILL)) {
+					e.setCancelled(true);
+					return;
+				}
+				if(e.getEntityType() == EntityType.ITEM_FRAME && !land.isBypassing(player, Action.BLOCK_BREAK)) {
 					e.setCancelled(true);
 				}
 			}
@@ -81,6 +87,11 @@ public class DamageListeners implements Listener {
 				Firework firework = (Firework)event.getDamager();
 				if(firework.getShooter() instanceof Player) {
 					player = (Player)firework.getShooter();
+				}
+			}else if(event.getDamager() instanceof EnderPearl) {
+				EnderPearl enderpearl = (EnderPearl)event.getDamager();
+				if(enderpearl.getShooter() instanceof Player) {
+					player = (Player)enderpearl.getShooter();
 				}
 			}
 		}

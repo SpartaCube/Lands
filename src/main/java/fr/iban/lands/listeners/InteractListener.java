@@ -39,6 +39,7 @@ public class InteractListener implements Listener {
 
 	@EventHandler
 	public void onPhysics(PlayerInteractEvent e) {
+		Player player = e.getPlayer();
 		Block block = e.getClickedBlock();
 		if(block == null)
 			return;
@@ -55,7 +56,6 @@ public class InteractListener implements Listener {
 		}
 
 		if(e.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
-			Player player = e.getPlayer();
 
 			if(land.getType() == LandType.SYSTEM && (e.getClickedBlock().getType().toString().endsWith("_DOOR") || e.getClickedBlock().getType().toString().endsWith("_GATE"))) {
 				if(block.getBlockData() instanceof Openable) {

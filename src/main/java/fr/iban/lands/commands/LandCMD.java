@@ -125,64 +125,74 @@ public class LandCMD implements CommandExecutor, TabCompleter {
 			break;
 		case "claimat":
 			if(args.length == 4) {
-				LandMap map = landManager.getLandMap();
-				if(!map.getLandMapSelection().isEmpty() && map.getLandMapSelection().containsKey(uuid)) {
-					Land land = map.getLandMapSelection().get(player.getUniqueId());
-					if(land != null) {
-						World world = Bukkit.getWorld(args[1]);
-						int X = Integer.parseInt(args[2]);
-						int Z = Integer.parseInt(args[3]);
-						landManager.claim(player, world.getChunkAt(X,Z), land, true).thenRun(() -> Bukkit.getScheduler().runTask(plugin, () -> {
-							map.display(player, land);
-						}));
+				landManager.future(() -> {
+					LandMap map = landManager.getLandMap();
+					if(!map.getLandMapSelection().isEmpty() && map.getLandMapSelection().containsKey(uuid)) {
+						Land land = map.getLandMapSelection().get(player.getUniqueId());
+						if(land != null) {
+							World world = Bukkit.getWorld(args[1]);
+							int X = Integer.parseInt(args[2]);
+							int Z = Integer.parseInt(args[3]);
+							landManager.claim(player, world.getChunkAt(X,Z), land, true).thenRun(() -> Bukkit.getScheduler().runTask(plugin, () -> {
+								map.display(player, land);
+							}));
+						}
 					}
-				}
+				});
 			}
 			break;
 		case "unclaimat":
 			if(args.length == 4) {
-				LandMap map = landManager.getLandMap();
-				if(!map.getLandMapSelection().isEmpty() && map.getLandMapSelection().containsKey(uuid)) {
-					Land land = map.getLandMapSelection().get(player.getUniqueId());
-					if(land != null) {
-						World world = Bukkit.getWorld(args[1]);
-						int X = Integer.parseInt(args[2]);
-						int Z = Integer.parseInt(args[3]);
-						if(land instanceof PlayerLand) {
-							landManager.unclaim(player, world.getChunkAt(X,Z), land, true);
-						}else if(land instanceof SystemLand && player.hasPermission("lands.admin")) {
-							landManager.unclaim(world.getChunkAt(X,Z));
+				landManager.future(() -> {
+					LandMap map = landManager.getLandMap();
+					if(!map.getLandMapSelection().isEmpty() && map.getLandMapSelection().containsKey(uuid)) {
+						Land land = map.getLandMapSelection().get(player.getUniqueId());
+						if(land != null) {
+							World world = Bukkit.getWorld(args[1]);
+							int X = Integer.parseInt(args[2]);
+							int Z = Integer.parseInt(args[3]);
+							if(land instanceof PlayerLand) {
+								landManager.unclaim(player, world.getChunkAt(X,Z), land, true);
+							}else if(land instanceof SystemLand && player.hasPermission("lands.admin")) {
+								landManager.unclaim(world.getChunkAt(X,Z));
+							}
+							player.sendActionBar("§a§lLe tronçon a bien été unclaim.");
+							landManager.unclaim(player, world.getChunkAt(X,Z), land, true).thenRun(() -> Bukkit.getScheduler().runTask(plugin, () -> {
+								map.display(player, land);
+							}));
 						}
-						player.sendActionBar("§a§lLe tronçon a bien été unclaim.");
-						map.display(player, land);
 					}
-				}
+				});
 			}
 			break;
 		case "map":
-			if(args.length == 1) {
-				landManager.getLandMap().display(player, null);
-			}else if(args.length == 2) {
-				String landName = args[1];
-				landManager.getPlayerLand(player, landName).thenAccept(land -> landManager.getLandMap().display(player, land));
-			}
+			landManager.future(() -> {
+				if(args.length == 1) {
+					landManager.getLandMap().display(player, null);
+				}else if(args.length == 2) {
+					String landName = args[1];
+					landManager.getPlayerLand(player, landName).thenAccept(land -> landManager.getLandMap().display(player, land));
+				}
+			});
 			break;
 		case "migrate":
-			ClaimsPlugin.getInstance().getClaimManager().getPlayersClaims().forEach((uid, claim) -> {
-				landManager.createLand(uid, "default").thenAcceptAsync(land -> {
-					for(ChunkXZ chunkxz : claim.getChunks()) {
-						landManager.claim(new SChunk(CoreBukkitPlugin.getInstance().getServerName(), chunkxz.getWorld(), chunkxz.getX(), chunkxz.getZ()), land);
-					}
-					for(Entry<UUID, ClaimPerms> perms : claim.getPlayersPerms().entrySet()) {
-						for(ClaimAction caction : perms.getValue().getPermissions()) {
-							landManager.addTrust(land, perms.getKey(), Action.valueOf(caction.toString()));
+			if(player.hasPermission("lands.admin")) {
+				ClaimsPlugin.getInstance().getClaimManager().getPlayersClaims().forEach((uid, claim) -> {
+					landManager.createLand(uid, "default").thenAcceptAsync(land -> {
+						for(ChunkXZ chunkxz : claim.getChunks()) {
+							landManager.claim(new SChunk(CoreBukkitPlugin.getInstance().getServerName(), chunkxz.getWorld(), chunkxz.getX(), chunkxz.getZ()), land);
 						}
-					}
-					for(ClaimAction caction : claim.getAllsPerm().getPermissions()) {
-						landManager.addGlobalTrust(land, Action.valueOf(caction.toString()));
-					}
+						for(Entry<UUID, ClaimPerms> perms : claim.getPlayersPerms().entrySet()) {
+							for(ClaimAction caction : perms.getValue().getPermissions()) {
+								landManager.addTrust(land, perms.getKey(), Action.valueOf(caction.toString()));
+							}
+						}
+						for(ClaimAction caction : claim.getAllsPerm().getPermissions()) {
+							landManager.addGlobalTrust(land, Action.valueOf(caction.toString()));
+						}
+					});
 				});
-			});
+			}
 			break;
 		case "help":
 			player.sendMessage(HexColor.MARRON_CLAIR.getColor() + "La protection de vos territoires se gère avec les commandes ci-dessous.");
@@ -224,8 +234,8 @@ public class LandCMD implements CommandExecutor, TabCompleter {
 	 * - /land claim setregion <NomRegion>
 	 * - /land unclaim here
 	 * - /land unclaim all	 
-     */
-	
+	 */
+
 	private BaseComponent[] getCommandUsage(String command, String desc) {
 		ComponentBuilder builder = new ComponentBuilder("- ").color(HexColor.MARRON_CLAIR.getColor());
 		builder.append(new ComponentBuilder(command)
