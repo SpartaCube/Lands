@@ -121,8 +121,8 @@ public class ChunkListMenu extends PaginatedMenu {
 			return new ItemBuilder(Material.DIRT).setDisplayName("§2§lTronçon")
 					.addLore("§fServeur : §a§l" + chunk.getServer())
 					.addLore("§fMonde : §a§l" + chunk.getWorld())
-					.addLore("§fCoordonnées (en chunk) : §a§lX : " + chunk.getX() + " Z : " + chunk.getZ())
-					.addLore("§fCoordonées (en bloc) : §a§lX : " + (chunk.getX()*16) + " Z : " + (chunk.getZ()*16))
+					.addLore("§fCoordonnées (en chunk) : X: §a§l" + chunk.getX() + " §fZ: §a§l" + chunk.getZ())
+					.addLore("§fCoordonées (en bloc) : X: §a§l" + (chunk.getX()*16) + " §fZ: §a§l" + (chunk.getZ()*16))
 					.addLore("§cCliquez pour supprimer.")
 					.build();
 		});

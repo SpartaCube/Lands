@@ -2,12 +2,9 @@ package fr.iban.lands.listeners;
 
 import java.util.Set;
 
-import org.bukkit.entity.Arrow;
-import org.bukkit.entity.EnderPearl;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Trident;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -72,27 +69,10 @@ public class DamageListeners implements Listener {
 
 	private Player getPlayerDamager(EntityDamageByEntityEvent event) {
 		Player player = null;
-		if(event.getCause() == DamageCause.PROJECTILE) {
-			if(event.getDamager() instanceof Arrow) {
-				Arrow arrow = (Arrow) event.getDamager();
-				if(arrow.getShooter() instanceof Player) {
-					player = (Player)arrow.getShooter();
-				}
-			}else if(event.getDamager() instanceof Trident) {
-				Trident trident = (Trident)event.getDamager();
-				if(trident.getShooter() instanceof Player) {
-					player = (Player)trident.getShooter();
-				}
-			}else if(event.getDamager() instanceof Firework) {
-				Firework firework = (Firework)event.getDamager();
-				if(firework.getShooter() instanceof Player) {
-					player = (Player)firework.getShooter();
-				}
-			}else if(event.getDamager() instanceof EnderPearl) {
-				EnderPearl enderpearl = (EnderPearl)event.getDamager();
-				if(enderpearl.getShooter() instanceof Player) {
-					player = (Player)enderpearl.getShooter();
-				}
+		if(event.getCause() == DamageCause.PROJECTILE && event.getDamager() instanceof Projectile) {
+			Projectile projectile = (Projectile) event.getDamager();
+			if(projectile.getShooter() instanceof Player) {
+				player = (Player)projectile.getShooter();
 			}
 		}
 		if(event.getDamager() instanceof Player) {

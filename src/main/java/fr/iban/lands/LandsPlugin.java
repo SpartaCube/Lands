@@ -17,6 +17,7 @@ import fr.iban.lands.listeners.BlockBreakListener;
 import fr.iban.lands.listeners.BlockPlaceListener;
 import fr.iban.lands.listeners.CommandListener;
 import fr.iban.lands.listeners.DamageListeners;
+import fr.iban.lands.listeners.DropListener;
 import fr.iban.lands.listeners.EntityBlockDamageListener;
 import fr.iban.lands.listeners.EntityExplodeListener;
 import fr.iban.lands.listeners.EntitySpawnListener;
@@ -39,6 +40,7 @@ public final class LandsPlugin extends JavaPlugin {
 	@Override
 	public void onEnable() {
 		instance = this;
+		saveDefaultConfig();
 		DbTables tables = new DbTables();
 		tables.create();
 		
@@ -72,7 +74,8 @@ public final class LandsPlugin extends JavaPlugin {
 				new CommandListener(this),
 				new ShopCreateListener(this),
 				new HangingListeners(this),
-				new TeleportListener(this)
+				new TeleportListener(this),
+				new DropListener(this)
 				);
 	}
 

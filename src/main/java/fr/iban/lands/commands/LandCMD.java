@@ -1,7 +1,6 @@
 package fr.iban.lands.commands;
 
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -12,18 +11,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.bukkitcore.utils.HexColor;
-import fr.iban.claims.ClaimsPlugin;
-import fr.iban.claims.objects.ChunkXZ;
-import fr.iban.claims.utils.ClaimAction;
-import fr.iban.claims.utils.ClaimPerms;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.enums.Action;
 import fr.iban.lands.objects.Land;
 import fr.iban.lands.objects.PlayerLand;
-import fr.iban.lands.objects.SChunk;
 import fr.iban.lands.objects.SystemLand;
 import fr.iban.lands.utils.ChatUtils;
 import fr.iban.lands.utils.LandMap;
@@ -54,6 +46,11 @@ public class LandCMD implements CommandExecutor, TabCompleter {
 		Player player = (Player)sender;
 		UUID uuid = player.getUniqueId();
 
+		if(!plugin.getConfig().getBoolean("players-lands-enabled")) {
+			sender.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
+			return false;
+		}
+		
 		if(args.length == 0) {
 			player.performCommand("land help");
 			return false;
@@ -175,25 +172,25 @@ public class LandCMD implements CommandExecutor, TabCompleter {
 				}
 			});
 			break;
-		case "migrate":
-			if(player.hasPermission("lands.admin")) {
-				ClaimsPlugin.getInstance().getClaimManager().getPlayersClaims().forEach((uid, claim) -> {
-					landManager.createLand(uid, "default").thenAcceptAsync(land -> {
-						for(ChunkXZ chunkxz : claim.getChunks()) {
-							landManager.claim(new SChunk(CoreBukkitPlugin.getInstance().getServerName(), chunkxz.getWorld(), chunkxz.getX(), chunkxz.getZ()), land);
-						}
-						for(Entry<UUID, ClaimPerms> perms : claim.getPlayersPerms().entrySet()) {
-							for(ClaimAction caction : perms.getValue().getPermissions()) {
-								landManager.addTrust(land, perms.getKey(), Action.valueOf(caction.toString()));
-							}
-						}
-						for(ClaimAction caction : claim.getAllsPerm().getPermissions()) {
-							landManager.addGlobalTrust(land, Action.valueOf(caction.toString()));
-						}
-					});
-				});
-			}
-			break;
+//		case "migrate":
+//			if(player.hasPermission("lands.admin")) {
+//				ClaimsPlugin.getInstance().getClaimManager().getPlayersClaims().forEach((uid, claim) -> {
+//					landManager.createLand(uid, "default").thenAcceptAsync(land -> {
+//						for(ChunkXZ chunkxz : claim.getChunks()) {
+//							landManager.claim(new SChunk(CoreBukkitPlugin.getInstance().getServerName(), chunkxz.getWorld(), chunkxz.getX(), chunkxz.getZ()), land);
+//						}
+//						for(Entry<UUID, ClaimPerms> perms : claim.getPlayersPerms().entrySet()) {
+//							for(ClaimAction caction : perms.getValue().getPermissions()) {
+//								landManager.addTrust(land, perms.getKey(), Action.valueOf(caction.toString()));
+//							}
+//						}
+//						for(ClaimAction caction : claim.getAllsPerm().getPermissions()) {
+//							landManager.addGlobalTrust(land, Action.valueOf(caction.toString()));
+//						}
+//					});
+//				});
+//			}
+//			break;
 		case "help":
 			player.sendMessage(HexColor.MARRON_CLAIR.getColor() + "La protection de vos territoires se gère avec les commandes ci-dessous.");
 			player.sendMessage("");

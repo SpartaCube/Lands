@@ -1,15 +1,10 @@
 package fr.iban.lands.listeners;
 
 import org.bukkit.Chunk;
-import org.bukkit.entity.Arrow;
-import org.bukkit.entity.EnderPearl;
-import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Trident;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
 import org.bukkit.event.hanging.HangingPlaceEvent;
@@ -62,29 +57,12 @@ public class HangingListeners implements Listener {
 	
 	private Player getPlayerDamager(HangingBreakByEntityEvent event) {
 		Player player = null;
-		if(event.getCause() == RemoveCause.ENTITY) {
-			if(event.getRemover() instanceof Arrow) {
-				Arrow arrow = (Arrow) event.getRemover();
-				if(arrow.getShooter() instanceof Player) {
-					player = (Player)arrow.getShooter();
-				}
-			}else if(event.getRemover() instanceof Trident) {
-				Trident trident = (Trident)event.getRemover();
-				if(trident.getShooter() instanceof Player) {
-					player = (Player)trident.getShooter();
-				}
-			}else if(event.getRemover() instanceof Firework) {
-				Firework firework = (Firework)event.getRemover();
-				if(firework.getShooter() instanceof Player) {
-					player = (Player)firework.getShooter();
-				}
-			}else if(event.getRemover() instanceof EnderPearl) {
-				EnderPearl enderpearl = (EnderPearl)event.getRemover();
-				if(enderpearl.getShooter() instanceof Player) {
-					player = (Player)enderpearl.getShooter();
+		if(event.getCause() == RemoveCause.ENTITY && event.getRemover() instanceof Projectile) {
+				Projectile projectile = (Projectile) event.getRemover();
+				if(projectile.getShooter() instanceof Player) {
+					player = (Player)projectile.getShooter();
 				}
 			}
-		}
 		if(event.getRemover() instanceof Player) {
 			player = (Player) event.getRemover();
 		}

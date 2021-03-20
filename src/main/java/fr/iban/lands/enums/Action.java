@@ -22,7 +22,8 @@ public enum Action {
 	SHOP_CREATE("Créer un shop dans votre warp", new ItemStack(Material.CHEST)),
 	ENTITY_INTERACT("Interagir avec les entités (ex: villagois)", new ItemStack(Material.EMERALD)),
 	LECTERN_TAKE("Prendre les livres sur les pupitres", new ItemStack(Material.LECTERN)),
-	BREWING_STAND_INTERACT("Utiliser les alambics", new ItemStack(Material.BREWING_STAND))
+	BREWING_STAND_INTERACT("Utiliser les alambics", new ItemStack(Material.BREWING_STAND)),
+	DROP("Jeter des items", new ItemStack(Material.ROTTEN_FLESH))
 	;
 	
 	

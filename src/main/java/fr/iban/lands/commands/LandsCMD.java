@@ -29,8 +29,7 @@ public class LandsCMD implements CommandExecutor, TabCompleter {
 
 			Player player = (Player)sender;
 
-			if(args.length == 0) {
-
+			if(args.length == 0 && plugin.getConfig().getBoolean("players-lands-enabled")) {
 				landManager.getLandsAsync(player).thenAccept(lands -> {
 					Bukkit.getScheduler().runTask(plugin, () -> new LandMainMenu(player, plugin, lands).open());	
 				});		

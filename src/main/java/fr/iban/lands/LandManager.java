@@ -545,7 +545,7 @@ public class LandManager {
 		if(player != null) {
 			Land landat = getLandAt(player.getChunk());
 			if(landat instanceof PlayerLand) {
-				PlayerLand pland = (PlayerLand)land;
+				PlayerLand pland = (PlayerLand)landat;
 				if(pland.getOwner().equals(sender.getUniqueId())) {
 					player.teleportAsync(Bukkit.getWorld("world").getSpawnLocation());
 				}
