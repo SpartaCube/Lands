@@ -72,11 +72,14 @@ public final class LandsPlugin extends JavaPlugin {
 				new DamageListeners(this),
 				new EntityBlockDamageListener(this),
 				new CommandListener(this),
-				new ShopCreateListener(this),
 				new HangingListeners(this),
 				new TeleportListener(this),
 				new DropListener(this)
 				);
+		
+		if(getServer().getPluginManager().getPlugin("QuickShop") != null) {
+			getServer().getPluginManager().registerEvents(new ShopCreateListener(this), this);
+		}
 	}
 
 	@Override

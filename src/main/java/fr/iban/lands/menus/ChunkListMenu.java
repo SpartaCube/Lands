@@ -1,8 +1,8 @@
 package fr.iban.lands.menus;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -22,7 +22,7 @@ import fr.iban.lands.utils.ChunkUtils;
 public class ChunkListMenu extends PaginatedMenu {
 
 	private Land land;
-	private Collection<SChunk> chunks = new ArrayList<>();
+	private List<SChunk> chunks = new ArrayList<>();
 	private Map<Integer, SChunk> chunkAtSlot;
 	private LandManager manager;
 	private Menu previousMenu;
@@ -84,24 +84,21 @@ public class ChunkListMenu extends PaginatedMenu {
 	public void setMenuItems() {
 		addMenuBorder();
 		chunkAtSlot = new HashMap<>();
+		
 		if(chunks != null && !chunks.isEmpty()) {
-
-			int count = 0;
-			for(SChunk schunk : chunks) {
-				index = getMaxItemsPerPage() * page + count;
-
-				if(index <= chunks.size() && count < maxItemsPerPage) {
+			for(int i = 0; i < getMaxItemsPerPage(); i++) {
+				index = getMaxItemsPerPage() * page + i;
+				if(index >= chunks.size()) break;
+				if (chunks.get(index) != null){
 					final int slot = inventory.firstEmpty();
+					SChunk schunk = chunks.get(index);
 					inventory.setItem(slot, new ItemBuilder(Material.PLAYER_HEAD).setDisplayName("§cChargement...").build());
 					chunkAtSlot.put(slot, schunk);
 					getChunkItem(schunk).thenAccept(item -> inventory.setItem(slot, item));
-				}else {
-					break;
 				}
 
-				count++;
-
 			}
+
 		}
 
 		if(previousMenu != null) {

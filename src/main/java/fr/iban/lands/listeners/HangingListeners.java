@@ -1,6 +1,7 @@
 package fr.iban.lands.listeners;
 
 import org.bukkit.Chunk;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -26,7 +27,7 @@ public class HangingListeners implements Listener {
 	public void onHangingBreak(HangingBreakByEntityEvent e) {	
 		Chunk chunk = e.getEntity().getChunk();
 		
-		Player player = getPlayerDamager(e);
+		Player player = getPlayerRemover(e);
 		
 		if(player != null) {			
 			
@@ -54,19 +55,26 @@ public class HangingListeners implements Listener {
 		}
 
 	}
-	
-	private Player getPlayerDamager(HangingBreakByEntityEvent event) {
+
+	private Player getPlayerRemover(HangingBreakByEntityEvent event) {
 		Player player = null;
 		if(event.getCause() == RemoveCause.ENTITY && event.getRemover() instanceof Projectile) {
-				Projectile projectile = (Projectile) event.getRemover();
-				if(projectile.getShooter() instanceof Player) {
-					player = (Player)projectile.getShooter();
+			Projectile projectile = (Projectile) event.getRemover();
+			if(projectile.getShooter() instanceof Player) {
+				player = (Player)projectile.getShooter();
+			}
+		}
+		if(event.getCause() == RemoveCause.EXPLOSION) {
+			if(event.getRemover() instanceof Mob) {
+				Mob mob = (Mob)event.getRemover();
+				if(mob.getTarget() instanceof Player) {
+					player = (Player)mob.getTarget();
 				}
 			}
+		}
 		if(event.getRemover() instanceof Player) {
 			player = (Player) event.getRemover();
 		}
 		return player;
 	}
-
 }

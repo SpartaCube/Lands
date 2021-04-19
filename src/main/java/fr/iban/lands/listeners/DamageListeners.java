@@ -3,6 +3,7 @@ package fr.iban.lands.listeners;
 import java.util.Set;
 
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -52,15 +53,9 @@ public class DamageListeners implements Listener {
 			EntityDamageByEntityEvent event = (EntityDamageByEntityEvent)e;
 			Player player = getPlayerDamager(event);
 			if(player != null) {
-				if(!mobs.contains(e.getEntityType()) && !land.isBypassing(player, Action.PASSIVE_KILL)) {
-					e.setCancelled(true);
-					return;
-				}
-				if(e.getEntity().getCustomName() != null && !land.isBypassing(player, Action.TAGGED_KILL)) {
-					e.setCancelled(true);
-					return;
-				}
-				if(e.getEntityType() == EntityType.ITEM_FRAME && !land.isBypassing(player, Action.BLOCK_BREAK)) {
+				if((e.getEntityType() == EntityType.ITEM_FRAME && !land.isBypassing(player, Action.BLOCK_BREAK))
+						|| (!mobs.contains(e.getEntityType()) && !land.isBypassing(player, Action.PASSIVE_KILL))
+						|| (e.getEntity().getCustomName() != null && !land.isBypassing(player, Action.TAGGED_KILL))) {
 					e.setCancelled(true);
 				}
 			}
@@ -73,6 +68,14 @@ public class DamageListeners implements Listener {
 			Projectile projectile = (Projectile) event.getDamager();
 			if(projectile.getShooter() instanceof Player) {
 				player = (Player)projectile.getShooter();
+			}
+		}
+		if(event.getCause() == DamageCause.ENTITY_EXPLOSION) {
+			if(event.getDamager() instanceof Mob) {
+				Mob mob = (Mob)event.getDamager();
+				if(mob.getTarget() instanceof Player) {
+					player = (Player)mob.getTarget();
+				}
 			}
 		}
 		if(event.getDamager() instanceof Player) {

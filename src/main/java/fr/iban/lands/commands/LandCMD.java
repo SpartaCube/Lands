@@ -46,7 +46,7 @@ public class LandCMD implements CommandExecutor, TabCompleter {
 		Player player = (Player)sender;
 		UUID uuid = player.getUniqueId();
 
-		if(!plugin.getConfig().getBoolean("players-lands-enabled")) {
+		if(!plugin.getConfig().getBoolean("players-lands-enabled") && !sender.hasPermission("lands.bypass")) {
 			sender.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
 			return false;
 		}

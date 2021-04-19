@@ -1,9 +1,11 @@
 package fr.iban.lands.menus;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -27,8 +29,9 @@ public class TrustsManageMenu extends PaginatedMenu {
 	private Map<UUID, Trust> trusts;
 	private LandManager manager;
 	private LandManageMenu previousMenu;
-	
-	
+	private Map<Integer, UUID> uuidAtSlot = new HashMap<>();
+
+
 	public TrustsManageMenu(Player player, LandManager manager, Land land) {
 		super(player);
 		this.manager = manager;
@@ -55,17 +58,17 @@ public class TrustsManageMenu extends PaginatedMenu {
 	public void handleMenu(InventoryClickEvent e) {
 		Player player = (Player) e.getWhoClicked();
 		ItemStack item = e.getCurrentItem();
-		
+
 		checkBottonsClick(item, player);
 
 		if(e.getClickedInventory() != e.getView().getTopInventory()) {
 			return;
 		}
-		
+
 		if(previousMenu != null && displayNameEquals(item, "§4Retour")) {
 			previousMenu.open();
 		}
-		
+
 		if(item.getType() == Material.PLAYER_HEAD) {
 			if(displayNameEquals(item, "§2Ajouter")) {
 				CoreBukkitPlugin core = CoreBukkitPlugin.getInstance();
@@ -83,49 +86,48 @@ public class TrustsManageMenu extends PaginatedMenu {
 				});
 				return;
 			}
-			
+
 			if(displayNameEquals(item, "§2Permissions globales")) {
 				new GlobalTrustEditMenu(player, land, manager, this).open();
 				return;
 			}
-			
-			UUID uuid = getClickedTrustUUID(item.getItemMeta().getDisplayName());
-			
+
+			UUID uuid = uuidAtSlot.get(e.getSlot());
+
 			if(uuid == null) {
 				return;
 			}
-			
+
 			new TrustEditMenu(player, uuid, land, manager, this).open();
 		}
-		
+
 	}
 
 	@Override
 	public void setMenuItems() {
+		uuidAtSlot.clear();
 		addMenuBorder();
 
 		if(trusts != null && !trusts.isEmpty()) {
-			
-			int count = 0;
-			for(Entry<UUID, Trust> entry : trusts.entrySet()) {
-				index = getMaxItemsPerPage() * page + count;
-
-				if(index <= trusts.size() && count < maxItemsPerPage) {
+			List<UUID> uuids = trusts.keySet().stream().collect(Collectors.toList());
+			for(int i = 0; i < getMaxItemsPerPage(); i++) {
+				index = getMaxItemsPerPage() * page + i;
+				if(index >= uuids.size()) break;
+				if (uuids.get(index) != null){
 					final int slot = inventory.firstEmpty();
+					UUID warp = uuids.get(index);
+					uuidAtSlot.put(slot, warp);
 					inventory.setItem(slot, new ItemBuilder(Material.PLAYER_HEAD).setDisplayName("§cChargement...").build());
-					getTrustItem(entry.getKey()).thenAccept(item -> inventory.setItem(slot, item));
-				}else {
-					break;
+					getTrustItem(uuids.get(index)).thenAccept(item -> inventory.setItem(slot, item));
 				}
-				
-				count++;
-				
+
 			}
+
 		}
 		inventory.setItem(27, new ItemBuilder(Head.GLOBE.get()).setName("§2Permissions globales").addLore("§aPermet de définir des permissions qui seront appliquées à tout le monde.").build());
 
 		inventory.setItem(35, new ItemBuilder(Head.OAK_PLUS.get()).setName("§2Ajouter").addLore("§aPermet d'ajouter un joueur pour éditer ses permissions.").build());
-	
+
 		if(previousMenu != null) {
 			inventory.setItem(31, new ItemBuilder(Material.RED_STAINED_GLASS_PANE).setDisplayName("§4Retour")
 					.addLore("§cRetourner au menu précédent")
@@ -137,28 +139,19 @@ public class TrustsManageMenu extends PaginatedMenu {
 	public int getElementAmount() {
 		return trusts.size();
 	}
-	
+
 	private CompletableFuture<ItemStack> getTrustItem(UUID uuid) {
 		return CompletableFuture.supplyAsync(() -> {
 			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-	    	ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-	    	SkullMeta meta = (SkullMeta) head.getItemMeta();
-	    	meta.setOwningPlayer(offlinePlayer);
-	    	head.setItemMeta(meta);
+			ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+			SkullMeta meta = (SkullMeta) head.getItemMeta();
+			meta.setOwningPlayer(offlinePlayer);
+			head.setItemMeta(meta);
 			return new ItemBuilder(head).setDisplayName("§2§l"+offlinePlayer.getName())
 					.addLore("§aClic gauche pour éditer")
 					.addLore("§cClic droit pour supprimer")
 					.build();
 		});
-	}
-	
-	private UUID getClickedTrustUUID(String itemdisplayname) {
-		for(Entry<UUID, Trust> entry : trusts.entrySet()) {
-			if(("§2§l" + Bukkit.getOfflinePlayer(entry.getKey()).getName()).equals(itemdisplayname)){
-				return entry.getKey();
-			}
-		}
-		return null;
 	}
 
 

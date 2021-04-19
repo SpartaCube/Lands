@@ -87,7 +87,10 @@ public class LandSettingsMenu extends PaginatedMenu{
 					open();
 				}else {
 					manager.renameLand(land, player, texte).thenRun(() -> 
-						Bukkit.getScheduler().runTask(LandsPlugin.getInstance(), () -> open())
+						Bukkit.getScheduler().runTask(LandsPlugin.getInstance(), () -> {
+							open();
+							core.getTextInputs().remove(player.getUniqueId());
+						})
 					);
 				}
 			});
