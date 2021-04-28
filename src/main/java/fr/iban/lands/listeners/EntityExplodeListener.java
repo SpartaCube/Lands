@@ -4,7 +4,7 @@ import java.util.Iterator;
 
 import org.bukkit.Chunk;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Mob;
+import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -48,9 +48,9 @@ public class EntityExplodeListener implements Listener {
 	}
 	
 	private Player getTargetPlayer(EntityExplodeEvent e) {
-		if(e.getEntity() instanceof Mob) {
-			Mob mob = (Mob) e.getEntity();
-			return (Player) mob.getTarget();
+		if(e.getEntity() instanceof Creeper) {
+			Creeper creeper = (Creeper) e.getEntity();
+			return (Player) creeper.getTarget();
 		}
 		return null;
 	}

@@ -17,7 +17,6 @@ import fr.iban.bukkitcore.utils.ItemBuilder;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.objects.Land;
 import fr.iban.lands.objects.SChunk;
-import fr.iban.lands.utils.ChunkUtils;
 
 public class ChunkListMenu extends PaginatedMenu {
 
@@ -32,8 +31,8 @@ public class ChunkListMenu extends PaginatedMenu {
 		super(player);
 		this.manager = manager;
 		this.land = land;
-		for(String string : manager.getChunks(land)) {
-			chunks.add(ChunkUtils.getSChunkFromString(string));
+		for(SChunk schunk : manager.getChunks(land)) {
+			chunks.add(schunk);
 		}
 	}
 

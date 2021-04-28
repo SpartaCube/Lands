@@ -1,7 +1,9 @@
 package fr.iban.lands.commands;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -172,6 +174,9 @@ public class LandCMD implements CommandExecutor, TabCompleter {
 				}
 			});
 			break;
+		case "menu":
+			player.performCommand("lands");
+			break;
 //		case "migrate":
 //			if(player.hasPermission("lands.admin")) {
 //				ClaimsPlugin.getInstance().getClaimManager().getPlayersClaims().forEach((uid, claim) -> {
@@ -246,8 +251,21 @@ public class LandCMD implements CommandExecutor, TabCompleter {
 
 	@Override
 	public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+		if(sender instanceof Player) {
+			Player player = (Player)sender;
+			if(args.length == 1) {
+		        return getStartsWithList(Arrays.asList("menu", "map", "claim", "unclaim"), args[0]);
+			}else if(args.length == 2) {
+				if(args[0].equalsIgnoreCase("map")) {
+					return getStartsWithList(landManager.getLands(player).stream().map(land -> land.getName()).collect(Collectors.toList()), args[1]);
+				}
+			}
+		}
 		return null;
 	}
 
+	private List<String> getStartsWithList(List<String> list, String with){
+        return list.stream().filter(string -> string.toLowerCase().startsWith(with.toLowerCase())).collect(Collectors.toList());
+	}
 
 }

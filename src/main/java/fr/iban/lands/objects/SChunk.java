@@ -18,6 +18,10 @@ public class SChunk {
 		this.x = x;
 		this.z = z;
 	}
+	
+	public SChunk(Chunk chunk) {
+		this(CoreBukkitPlugin.getInstance().getServerName(), chunk.getWorld().getName(), chunk.getX(), chunk.getZ());
+	}
 
 	public String getServer() {
 		return server;
@@ -55,10 +59,6 @@ public class SChunk {
 		return chunk.getWorld().getName().equals(world) && chunk.getX() == x && chunk.getZ() == z && CoreBukkitPlugin.getInstance().getServerName().equals(server);
 	}
 
-	public boolean equalsChunk(SChunk schunk) {
-		return schunk.getWorld().equals(world) && schunk.getX() == x && schunk.getZ() == z && CoreBukkitPlugin.getInstance().getServerName().equals(server);
-	}
-
 	public Chunk getChunk() {
 		return Bukkit.getWorld(world).getChunkAt(x, z);
 	}
@@ -76,4 +76,41 @@ public class SChunk {
 		return sb.toString();
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((server == null) ? 0 : server.hashCode());
+		result = prime * result + ((world == null) ? 0 : world.hashCode());
+		result = prime * result + x;
+		result = prime * result + z;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		SChunk other = (SChunk) obj;
+		if (server == null) {
+			if (other.server != null)
+				return false;
+		} else if (!server.equals(other.server))
+			return false;
+		if (world == null) {
+			if (other.world != null)
+				return false;
+		} else if (!world.equals(other.world))
+			return false;
+		if (x != other.x)
+			return false;
+		if (z != other.z)
+			return false;
+		return true;
+	}
+	
 }

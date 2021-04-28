@@ -29,8 +29,8 @@ public class Storage implements AbstractStorage {
 
 
 	@Override
-	public Map<String, Integer> getChunks() {
-		Map<String, Integer> chunks = new HashMap<>();
+	public Map<SChunk, Integer> getChunks() {
+		Map<SChunk, Integer> chunks = new HashMap<>();
 
 		try(Connection connection = ds.getConnection()){
 			try(PreparedStatement ps = connection.prepareStatement(
@@ -44,7 +44,7 @@ public class Storage implements AbstractStorage {
 						String world = rs.getString("world");
 						int x = rs.getInt("x");
 						int z = rs.getInt("z");
-						chunks.put(new SChunk(server, world, x, z).toString(), id);
+						chunks.put(new SChunk(server, world, x, z), id);
 					}
 				}
 			}

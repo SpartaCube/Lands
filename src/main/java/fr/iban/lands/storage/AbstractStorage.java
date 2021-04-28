@@ -16,7 +16,7 @@ import fr.iban.lands.objects.SystemLand;
 
 public interface AbstractStorage {
 		
-	Map<String, Integer> getChunks();
+	Map<SChunk, Integer> getChunks();
 	
 	Map<SChunk, Integer> getChunks(UUID uuid);
 	

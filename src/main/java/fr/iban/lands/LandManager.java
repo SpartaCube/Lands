@@ -23,7 +23,6 @@ import org.bukkit.entity.Player;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
-import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.common.data.AccountProvider;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
@@ -33,7 +32,6 @@ import fr.iban.lands.objects.PlayerLand;
 import fr.iban.lands.objects.SChunk;
 import fr.iban.lands.objects.SystemLand;
 import fr.iban.lands.storage.AbstractStorage;
-import fr.iban.lands.utils.ChunkUtils;
 import fr.iban.lands.utils.LandMap;
 
 public class LandManager {
@@ -42,7 +40,7 @@ public class LandManager {
 	private boolean loaded = false;
 
 	private Map<Integer, Land> lands = new ConcurrentHashMap<>();
-	private Map<String, Land> chunks = new ConcurrentHashMap<>();
+	private Map<SChunk, Land> chunks = new ConcurrentHashMap<>();
 	private LandMap landMap;
 	private LandsPlugin plugin;
 	private Land wilderness;
@@ -72,8 +70,8 @@ public class LandManager {
 				}
 			});
 			plugin.getLogger().log(Level.INFO, "Chargement des chunks...");
-			Map<String, Integer> savedchunks = storage.getChunks();
-			for(Entry<String, Integer> entry : savedchunks.entrySet()) {
+			Map<SChunk, Integer> savedchunks = storage.getChunks();
+			for(Entry<SChunk, Integer> entry : savedchunks.entrySet()) {
 				getChunks().put(entry.getKey(), getLands().get(entry.getValue()));
 			}
 			plugin.getLogger().log(Level.INFO, getChunks().size() + " chunks chargées");
@@ -344,9 +342,9 @@ public class LandManager {
 	/*
 	 * Retourne la liste des chunks d'un territoire.
 	 */
-	public Collection<String> getChunks(Land land) {
-		Set<String> chunksSet = new HashSet<>();
-		for(Entry<String, Land> entry : getChunks().entrySet()) {
+	public Collection<SChunk> getChunks(Land land) {
+		Set<SChunk> chunksSet = new HashSet<>();
+		for(Entry<SChunk, Land> entry : getChunks().entrySet()) {
 			if(land.equals(entry.getValue())) {
 				chunksSet.add(entry.getKey());
 			}
@@ -357,7 +355,7 @@ public class LandManager {
 	/*
 	 * Retourne tous les chunks claim du serveur.
 	 */
-	public Map<String, Land> getChunks() {
+	public Map<SChunk, Land> getChunks() {
 		return chunks;
 	}
 
@@ -393,17 +391,20 @@ public class LandManager {
 	 * CLAIM / UNCLAIM
 	 */
 
-	private Cache<String, Land> chunksCache = Caffeine.newBuilder()
+	private Cache<SChunk, Land> chunksCache = Caffeine.newBuilder()
 			.expireAfterAccess(10, TimeUnit.MINUTES)
 			.maximumSize(1000)
 			.build();
 
 	public Land getLandAt(Chunk chunk) {
-		return chunksCache.get(ChunkUtils.serialize(chunk), land -> getChunks().getOrDefault(ChunkUtils.serialize(chunk), wilderness));
+		return getLandAt(new SChunk(chunk));
 	}
 
 	public Land getLandAt(SChunk schunk) {
-		return chunksCache.get(schunk.toString(), land -> getChunks().getOrDefault(schunk.toString(), wilderness));
+		if(!isLoaded()) {
+			getChunks().getOrDefault(schunk, wilderness);
+		}
+		return chunksCache.get(schunk, land -> getChunks().getOrDefault(schunk, wilderness));
 	}
 
 
@@ -412,22 +413,18 @@ public class LandManager {
 		return future(() ->  getLandAt(chunk));
 	}
 
-	public SChunk getSChunkFromChunk(Chunk chunk) {
-		return new SChunk(CoreBukkitPlugin.getInstance().getServerName(), chunk.getWorld().getName(), chunk.getX(), chunk.getZ());
-	}
-
 
 	/*
 	 * Ajouter un chunk à un territoire :
 	 */
 	public void claim(SChunk chunk, Land land) {
-		getChunks().put(chunk.toString(), land);
-		chunksCache.invalidate(chunk.toString());
+		getChunks().put(chunk, land);
+		chunksCache.invalidate(chunk);
 		future(() -> storage.setChunk(land, chunk));
 	}
 
 	public void claim(Chunk chunk, Land land) {
-		claim(getSChunkFromChunk(chunk), land);
+		claim(new SChunk(chunk), land);
 	}
 
 	public CompletableFuture<Void> claim(Player player, Chunk chunk, Land land, boolean verbose) {
@@ -490,7 +487,7 @@ public class LandManager {
 	}
 
 	public CompletableFuture<Void> unclaim(Chunk chunk) {
-		return unclaim(getSChunkFromChunk(chunk));
+		return unclaim(new SChunk(chunk));
 	}
 
 	public CompletableFuture<Void> unclaim(SChunk schunk) {
@@ -499,9 +496,8 @@ public class LandManager {
 			if(land == null) {
 				return;
 			}
-			String chunkstring = schunk.toString();
-			chunks.remove(chunkstring);
-			chunksCache.invalidate(chunkstring);
+			chunks.remove(schunk);
+			chunksCache.invalidate(schunk);
 			storage.removeChunk(schunk);
 		});
 	}
