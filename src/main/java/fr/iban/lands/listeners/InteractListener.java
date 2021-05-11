@@ -13,6 +13,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockFertilizeEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
+import org.bukkit.event.entity.PlayerLeashEntityEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -80,13 +81,20 @@ public class InteractListener implements Listener {
 			if((block.getType() == Material.ANVIL && !land.isBypassing(player, Action.USE_ANVIL))
 					|| (block.getType() == Material.BREWING_STAND && !land.isBypassing(player, Action.BREWING_STAND_INTERACT))
 					|| (block.getBlockData() instanceof Powerable && !land.isBypassing(player, Action.USE)) 
+					|| ((block.getType() == Material.DRAGON_EGG || (block.getType().name().startsWith("POTTED_") || block.getType() == Material.FLOWER_POT)) && !land.isBypassing(player, Action.OTHER_INTERACTS))
 					|| (block.getBlockData() instanceof Bed && !land.isBypassing(player, Action.USE_BED))
 					|| ((block.getState() instanceof InventoryHolder || block.getType() == Material.JUKEBOX) && !land.isBypassing(player, Action.OPEN_CONTAINER))
 					|| (player.getInventory().getItemInMainHand().getType().toString().endsWith("SPAWN_EGG") || player.getInventory().getItemInOffHand().getType().toString().endsWith("SPAWN_EGG") && !land.isBypassing(player, Action.ALL))) {
 				e.setCancelled(true);
 			}
 
+		}else if(e.getAction() == org.bukkit.event.block.Action.LEFT_CLICK_BLOCK) {
+			if(block.getType() == Material.DRAGON_EGG && !land.isBypassing(player, Action.OTHER_INTERACTS)){
+				e.setCancelled(true);
+			}
+
 		}
+
 
 	}
 
@@ -140,6 +148,18 @@ public class InteractListener implements Listener {
 			return;
 		}
 		if(!land.isBypassing(e.getPlayer(), Action.ENTITY_INTERACT)) {
+			e.setCancelled(true);
+		}
+	}
+	
+	@EventHandler
+	public void onLeash(PlayerLeashEntityEvent e) {
+		Player player = e.getPlayer();
+		Land land = landmanager.getLandAt(e.getEntity().getChunk());
+		
+		if(land == null) return;
+		
+		if(!land.isBypassing(player, Action.LEASH)) {
 			e.setCancelled(true);
 		}
 	}

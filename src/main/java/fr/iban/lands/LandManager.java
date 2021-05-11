@@ -43,7 +43,7 @@ public class LandManager {
 	private Map<SChunk, Land> chunks = new ConcurrentHashMap<>();
 	private LandMap landMap;
 	private LandsPlugin plugin;
-	private Land wilderness;
+	private SystemLand wilderness = new SystemLand(-1, "Zone sauvage");
 
 	public LandManager(LandsPlugin plugin, AbstractStorage storage) {
 		this.storage = storage;
@@ -58,17 +58,10 @@ public class LandManager {
 		final long start = System.currentTimeMillis();
 		plugin.getLogger().log(Level.INFO, "Chargement des données :.");
 		Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+			
 			plugin.getLogger().log(Level.INFO, "Chargement des lands...");
 			getLands().putAll(storage.getLands());
-			getSystemLand("Zone sauvage").thenAccept(wild -> {
-				if(wild == null) {
-					createWilderness().thenAccept(land -> {
-						wilderness = land;
-					});
-				}else {
-					wilderness = wild;
-				}
-			});
+			
 			plugin.getLogger().log(Level.INFO, "Chargement des chunks...");
 			Map<SChunk, Integer> savedchunks = storage.getChunks();
 			for(Entry<SChunk, Integer> entry : savedchunks.entrySet()) {
@@ -78,18 +71,16 @@ public class LandManager {
 
 			plugin.getLogger().log(Level.INFO, "Chargement des liens...");
 			storage.loadLinks(this);
-			setLoaded(true);
+			getSystemLand("Zone sauvage").thenAccept(wild -> {
+				if(wild == null) {
+					saveWilderness(wilderness);
+				}else {
+					wilderness = wild;
+				}
+			});
+			loaded = true;
 			plugin.getLogger().log(Level.INFO, "Chargement des données terminé en " + (System.currentTimeMillis() - start) + " ms.");
 		});
-	}
-
-	//Vrai si les données sont chargées.
-	public boolean isLoaded() {
-		return loaded;
-	}
-
-	public void setLoaded(boolean loaded) {
-		this.loaded = loaded;
 	}
 
 	/*
@@ -232,14 +223,10 @@ public class LandManager {
 		});
 	}
 	
-	public CompletableFuture<SystemLand> createWilderness() {
+	public CompletableFuture<Void> saveWilderness(SystemLand land) {
 		return future(() -> {
-			SystemLand land = new SystemLand(-1, "Zone sauvage");
-			storage.addSystemLand(land);
 			getLands().put(-1, land);
-			land.setBans(new HashSet<>());
-			land.setFlags(new HashSet<>());
-			return land;
+			storage.addSystemLand(land);
 		});
 	}
 
@@ -401,8 +388,8 @@ public class LandManager {
 	}
 
 	public Land getLandAt(SChunk schunk) {
-		if(!isLoaded()) {
-			getChunks().getOrDefault(schunk, wilderness);
+		if(!loaded) {
+			return wilderness;
 		}
 		return chunksCache.get(schunk, land -> getChunks().getOrDefault(schunk, wilderness));
 	}

@@ -2,6 +2,7 @@ package fr.iban.lands.objects;
 
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -21,8 +22,8 @@ public class Land {
 	protected Trust globalTrust = new Trust();
 	protected LandType type;
 	protected Map<UUID, Trust> trusts = new HashMap<>();
-	protected Set<Flag> flags;
-	protected Set<UUID> bans;
+	protected Set<Flag> flags = new HashSet<>();
+	protected Set<UUID> bans = new HashSet<>();
 	private Map<Link, Land> links;
 
 	public Land(int id, String name) {
