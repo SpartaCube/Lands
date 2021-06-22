@@ -44,13 +44,16 @@ public class EntityExplodeListener implements Listener {
 			if(!land.hasFlag(Flag.EXPLOSIONS)) {
 				it.remove();
 			}
+			
 		}
 	}
 	
 	private Player getTargetPlayer(EntityExplodeEvent e) {
 		if(e.getEntity() instanceof Creeper) {
 			Creeper creeper = (Creeper) e.getEntity();
-			return (Player) creeper.getTarget();
+			if(creeper.getTarget() instanceof Player) {
+				return (Player) creeper.getTarget();
+			}
 		}
 		return null;
 	}

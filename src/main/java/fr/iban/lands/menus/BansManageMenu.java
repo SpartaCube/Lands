@@ -71,12 +71,13 @@ public class BansManageMenu extends PaginatedMenu {
 				player.closeInventory();
 				player.sendMessage("§2§lVeuillez entrer le nom du joueur que vous voulez bannir. :");
 				core.getTextInputs().put(player.getUniqueId(), texte -> {
-					Player target = Bukkit.getPlayer(texte);
-					if(target == null) {
-						player.sendMessage("§cCe joueur n'est pas en ligne.");
-						open();
-					}else {
+					@SuppressWarnings("deprecation")
+					OfflinePlayer target = Bukkit.getOfflinePlayer(texte);
+					if(target != null) {
 						manager.ban(player, land, target.getUniqueId());
+					}else {
+						player.sendMessage("§cCe joueur n'existe pas.");
+						open();
 					}
 					core.getTextInputs().remove(player.getUniqueId());
 				});

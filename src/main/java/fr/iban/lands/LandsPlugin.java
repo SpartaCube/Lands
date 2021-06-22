@@ -41,25 +41,25 @@ public final class LandsPlugin extends JavaPlugin {
 	public void onEnable() {
 		instance = this;
 		saveDefaultConfig();
+		this.bypass = new ArrayList<>();
+
 		DbTables tables = new DbTables();
 		tables.create();
-		
-		this.bypass = new ArrayList<>();
-		
 		Storage storage = new Storage();
 		landManager = new LandManager(this, storage);
 		landManager.loadData();
 
+
 		getCommand("land").setExecutor(new LandCMD(this));
 		getCommand("land").setTabCompleter(new LandCMD(this));
-		
+
 		getCommand("lands").setExecutor(new LandsCMD(this));
 		getCommand("lands").setTabCompleter(new LandsCMD(this));
-		
+
 		getCommand("addmaxclaim").setExecutor(new MaxClaimsCMD());
 		getCommand("removemaxclaim").setExecutor(new MaxClaimsCMD());
 		getCommand("getmaxclaim").setExecutor(new MaxClaimsCMD());
-		
+
 		registerListeners(
 				new PlayerMoveListener(this),
 				new PlayerTakeLecternBookListener(this),
@@ -76,7 +76,7 @@ public final class LandsPlugin extends JavaPlugin {
 				new TeleportListener(this),
 				new DropListener(this)
 				);
-		
+
 		if(getServer().getPluginManager().getPlugin("QuickShop") != null) {
 			getServer().getPluginManager().registerEvents(new ShopCreateListener(this), this);
 		}
@@ -95,7 +95,7 @@ public final class LandsPlugin extends JavaPlugin {
 	public static LandsPlugin getInstance() {
 		return instance;
 	}
-	
+
 	private void registerListeners(Listener... listeners) {
 
 		PluginManager pm = Bukkit.getPluginManager();
@@ -109,7 +109,7 @@ public final class LandsPlugin extends JavaPlugin {
 	public List<UUID> getBypass() {
 		return bypass;
 	}
-	
+
 	public boolean isBypassing(Player player) {
 		return getBypass().contains(player.getUniqueId());
 	}

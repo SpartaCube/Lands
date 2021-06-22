@@ -58,10 +58,10 @@ public class LandManager {
 		final long start = System.currentTimeMillis();
 		plugin.getLogger().log(Level.INFO, "Chargement des données :.");
 		Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-			
+
 			plugin.getLogger().log(Level.INFO, "Chargement des lands...");
 			getLands().putAll(storage.getLands());
-			
+
 			plugin.getLogger().log(Level.INFO, "Chargement des chunks...");
 			Map<SChunk, Integer> savedchunks = storage.getChunks();
 			for(Entry<SChunk, Integer> entry : savedchunks.entrySet()) {
@@ -79,7 +79,7 @@ public class LandManager {
 				}
 			});
 			loaded = true;
-			plugin.getLogger().log(Level.INFO, "Chargement des données terminé en " + (System.currentTimeMillis() - start) + " ms.");
+			plugin.getLogger().info("Chargement des données terminé en " + (System.currentTimeMillis() - start) + " ms.");
 		});
 	}
 
@@ -90,16 +90,25 @@ public class LandManager {
 		return lands;
 	}
 
+	
+	/*
+	 * Retourne la liste de toutes les territoires d'un joueur.
+	 */
+	public List<PlayerLand> getLands(UUID uuid) {
+		return getLands().values().stream()
+				.filter(PlayerLand.class::isInstance)
+				.map(PlayerLand.class::cast)
+				.filter(l -> l.getOwner().equals(uuid))
+				.collect(Collectors.toList());
+	}
+
+	
 	/*
 	 * Retourne la liste de toutes les territoires d'un joueur.
 	 */
 	public List<PlayerLand> getLands(Player player) {
 		UUID uuid = player.getUniqueId();
-		return getLands().values().stream()
-				.filter(l -> l instanceof PlayerLand)
-				.map(l -> (PlayerLand) l)
-				.filter(l -> l.getOwner().equals(uuid))
-				.collect(Collectors.toList());
+		return getLands(uuid);
 	}
 
 	/*
@@ -108,14 +117,18 @@ public class LandManager {
 	public CompletableFuture<List<Land>> getLandsAsync(Player player) {
 		return future(() ->  getLands(player).stream().collect(Collectors.toList()));
 	}
+	
+	public CompletableFuture<List<Land>> getLandsAsync(UUID uuid) {
+		return future(() ->  getLands(uuid).stream().collect(Collectors.toList()));
+	}
 
 	/*
 	 * Retourne la liste de toutes les territoires d'un joueur.
 	 */
 	public List<SystemLand> getSystemLands() {
 		return getLands().values().stream()
-				.filter(l -> l instanceof SystemLand)
-				.map(l -> (SystemLand) l)
+				.filter(SystemLand.class::isInstance)
+				.map(SystemLand.class::cast)
 				.collect(Collectors.toList());
 	}
 
@@ -150,7 +163,7 @@ public class LandManager {
 			return null;
 		});
 	}
-	
+
 	public boolean isWilderness(Land land) {
 		return land instanceof SystemLand && land.getName().equals("Zone sauvage");
 	}
@@ -222,7 +235,7 @@ public class LandManager {
 			return land;
 		});
 	}
-	
+
 	public CompletableFuture<Void> saveWilderness(SystemLand land) {
 		return future(() -> {
 			getLands().put(-1, land);

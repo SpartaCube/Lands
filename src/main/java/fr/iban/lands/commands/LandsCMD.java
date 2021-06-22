@@ -3,6 +3,7 @@ package fr.iban.lands.commands;
 import java.util.List;
 
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -39,9 +40,10 @@ public class LandsCMD implements CommandExecutor, TabCompleter {
 						Bukkit.getScheduler().runTask(plugin, () -> new LandMainMenu(player, plugin, lands, true).open());	
 					});	
 				}else {
-					Player target = Bukkit.getPlayer(args[0]);
-					if(target != null) {
-						landManager.getLandsAsync(target).thenAccept(lands -> {
+					@SuppressWarnings("deprecation")
+					OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
+					if(target.hasPlayedBefore()) {
+						landManager.getLandsAsync(target.getUniqueId()).thenAccept(lands -> {
 							Bukkit.getScheduler().runTask(plugin, () -> new LandMainMenu(player, plugin, lands).open());	
 						});		
 					}else {

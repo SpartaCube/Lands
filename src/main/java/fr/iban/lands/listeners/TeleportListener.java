@@ -26,7 +26,7 @@ public class TeleportListener implements Listener {
 		Location from = e.getFrom();
 		manager.getLandAtAsync(e.getTo().getChunk()).thenAccept(land -> {
 			Player player = e.getPlayer();
-			if(land.isBanned(player.getUniqueId()) && !plugin.isBypassing(player)) {
+			if(land.isBanned(player.getUniqueId()) && !plugin.isBypassing(player) && !player.hasPermission("group.support")) {
 				Bukkit.getScheduler().runTask(plugin, () -> {
 					player.teleportAsync(from);
 					player.sendMessage("§cVous ne pouvez pas entrer dans ce territoire, le propriétaire vous a banni.");

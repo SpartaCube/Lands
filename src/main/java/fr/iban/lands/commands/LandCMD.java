@@ -1,7 +1,9 @@
 package fr.iban.lands.commands;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -21,6 +23,7 @@ import fr.iban.lands.objects.PlayerLand;
 import fr.iban.lands.objects.SystemLand;
 import fr.iban.lands.utils.ChatUtils;
 import fr.iban.lands.utils.LandMap;
+import fr.iban.lands.utils.SeeChunks;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -30,6 +33,8 @@ public class LandCMD implements CommandExecutor, TabCompleter {
 
 	private LandManager landManager;
 	private LandsPlugin plugin;
+
+	private Map<UUID, SeeChunks> seeChunks = new HashMap<>();
 
 	public LandCMD(LandsPlugin plugin) {
 		this.plugin = plugin;
@@ -52,7 +57,7 @@ public class LandCMD implements CommandExecutor, TabCompleter {
 			sender.sendMessage("§cLes territoires ne sont pas activés sur ce serveur.");
 			return false;
 		}
-		
+
 		if(args.length == 0) {
 			player.performCommand("land help");
 			return false;
@@ -174,28 +179,41 @@ public class LandCMD implements CommandExecutor, TabCompleter {
 				}
 			});
 			break;
+		case "seeclaims":
+			if(!seeChunks.containsKey(uuid)) {
+				SeeChunks sc = new SeeChunks(player, landManager);
+				seeChunks.put(player.getUniqueId(), sc);
+				sc.showParticles();
+				player.sendMessage("§aMode vision de claims activé.");
+			}else {
+				SeeChunks sc = seeChunks.get(uuid);
+				sc.stop();
+				seeChunks.remove(uuid);
+				player.sendMessage("§cMode vision de claims désactivé.");
+			}
+			break;
 		case "menu":
 			player.performCommand("lands");
 			break;
-//		case "migrate":
-//			if(player.hasPermission("lands.admin")) {
-//				ClaimsPlugin.getInstance().getClaimManager().getPlayersClaims().forEach((uid, claim) -> {
-//					landManager.createLand(uid, "default").thenAcceptAsync(land -> {
-//						for(ChunkXZ chunkxz : claim.getChunks()) {
-//							landManager.claim(new SChunk(CoreBukkitPlugin.getInstance().getServerName(), chunkxz.getWorld(), chunkxz.getX(), chunkxz.getZ()), land);
-//						}
-//						for(Entry<UUID, ClaimPerms> perms : claim.getPlayersPerms().entrySet()) {
-//							for(ClaimAction caction : perms.getValue().getPermissions()) {
-//								landManager.addTrust(land, perms.getKey(), Action.valueOf(caction.toString()));
-//							}
-//						}
-//						for(ClaimAction caction : claim.getAllsPerm().getPermissions()) {
-//							landManager.addGlobalTrust(land, Action.valueOf(caction.toString()));
-//						}
-//					});
-//				});
-//			}
-//			break;
+			//		case "migrate":
+			//			if(player.hasPermission("lands.admin")) {
+			//				ClaimsPlugin.getInstance().getClaimManager().getPlayersClaims().forEach((uid, claim) -> {
+			//					landManager.createLand(uid, "default").thenAcceptAsync(land -> {
+			//						for(ChunkXZ chunkxz : claim.getChunks()) {
+			//							landManager.claim(new SChunk(CoreBukkitPlugin.getInstance().getServerName(), chunkxz.getWorld(), chunkxz.getX(), chunkxz.getZ()), land);
+			//						}
+			//						for(Entry<UUID, ClaimPerms> perms : claim.getPlayersPerms().entrySet()) {
+			//							for(ClaimAction caction : perms.getValue().getPermissions()) {
+			//								landManager.addTrust(land, perms.getKey(), Action.valueOf(caction.toString()));
+			//							}
+			//						}
+			//						for(ClaimAction caction : claim.getAllsPerm().getPermissions()) {
+			//							landManager.addGlobalTrust(land, Action.valueOf(caction.toString()));
+			//						}
+			//					});
+			//				});
+			//			}
+			//			break;
 		case "help":
 			player.sendMessage(HexColor.MARRON_CLAIR.getColor() + "La protection de vos territoires se gère avec les commandes ci-dessous.");
 			player.sendMessage("");
@@ -204,6 +222,7 @@ public class LandCMD implements CommandExecutor, TabCompleter {
 			player.sendMessage(getCommandUsage("/land unclaim", "Retire le tronçon où vous vous trouvez de vos territoires."));
 			player.sendMessage(getCommandUsage("/land map", "Affiche une carte des territoires alentours."));
 			player.sendMessage(getCommandUsage("/land kick <joueur> ", "Renvois un joueur qui se trouve dans votre territoire au spawn."));
+			player.sendMessage(getCommandUsage("/land seeclaims ", "Permet de voir les bordures des claims."));
 			player.sendMessage("");
 			player.sendMessage(HexColor.MARRON_CLAIR.getColor() + "Les " + HexColor.MARRON.getColor() + "tronçons(chunks) " + HexColor.MARRON_CLAIR.getColor() + "mesurent "
 					+ HexColor.MARRON.getColor() +"16x256x16 blocs" + HexColor.MARRON_CLAIR.getColor() + " et sont visible en appuyant sur les touche "
@@ -254,7 +273,7 @@ public class LandCMD implements CommandExecutor, TabCompleter {
 		if(sender instanceof Player) {
 			Player player = (Player)sender;
 			if(args.length == 1) {
-		        return getStartsWithList(Arrays.asList("menu", "map", "claim", "unclaim"), args[0]);
+				return getStartsWithList(Arrays.asList("menu", "map", "claim", "unclaim", "seeclaims"), args[0]);
 			}else if(args.length == 2) {
 				if(args[0].equalsIgnoreCase("map")) {
 					return getStartsWithList(landManager.getLands(player).stream().map(land -> land.getName()).collect(Collectors.toList()), args[1]);
@@ -265,7 +284,7 @@ public class LandCMD implements CommandExecutor, TabCompleter {
 	}
 
 	private List<String> getStartsWithList(List<String> list, String with){
-        return list.stream().filter(string -> string.toLowerCase().startsWith(with.toLowerCase())).collect(Collectors.toList());
+		return list.stream().filter(string -> string.toLowerCase().startsWith(with.toLowerCase())).collect(Collectors.toList());
 	}
 
 }
