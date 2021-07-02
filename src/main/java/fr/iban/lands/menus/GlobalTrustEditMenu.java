@@ -65,6 +65,9 @@ public class GlobalTrustEditMenu extends PaginatedMenu{
 		addMenuBorder();
 
 
+//		for(Action action : Action.values()) {
+//			Bukkit.broadcastMessage(action.toString());
+//		}
 		for(int i = 0; i < getMaxItemsPerPage(); i++) {
 			index = getMaxItemsPerPage() * page + i;
 			if(index >= Action.values().length) break;

@@ -26,7 +26,6 @@ import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.enums.LandType;
 import fr.iban.lands.objects.Land;
-import fr.iban.lands.objects.SystemLand;
 
 public class InteractListener implements Listener {
 
@@ -80,19 +79,22 @@ public class InteractListener implements Listener {
 
 			if((block.getType() == Material.ANVIL && !land.isBypassing(player, Action.USE_ANVIL))
 					|| (block.getType() == Material.BREWING_STAND && !land.isBypassing(player, Action.BREWING_STAND_INTERACT))
-					|| (block.getBlockData() instanceof Powerable && !land.isBypassing(player, Action.USE)) 
-					|| ((block.getType() == Material.DRAGON_EGG || (block.getType().name().startsWith("POTTED_") || block.getType() == Material.FLOWER_POT)) && !land.isBypassing(player, Action.OTHER_INTERACTS))
+					|| (block.getBlockData() instanceof Powerable && !land.isBypassing(player, Action.USE))
 					|| (block.getBlockData() instanceof Bed && !land.isBypassing(player, Action.USE_BED))
 					|| ((block.getState() instanceof InventoryHolder || block.getType() == Material.JUKEBOX) && !land.isBypassing(player, Action.OPEN_CONTAINER))
-					|| (player.getInventory().getItemInMainHand().getType().toString().endsWith("SPAWN_EGG") || player.getInventory().getItemInOffHand().getType().toString().endsWith("SPAWN_EGG") && !land.isBypassing(player, Action.ALL))) {
+					|| !land.isBypassing(player, Action.OTHER_INTERACTS)) {
 				e.setCancelled(true);
 			}
-
 		}else if(e.getAction() == org.bukkit.event.block.Action.LEFT_CLICK_BLOCK) {
-			if(block.getType() == Material.DRAGON_EGG && !land.isBypassing(player, Action.OTHER_INTERACTS)){
+			if(!land.isBypassing(player, Action.OTHER_INTERACTS)){
 				e.setCancelled(true);
 			}
-
+		}else if(e.getAction() == org.bukkit.event.block.Action.PHYSICAL) {
+			if(!land.isBypassing(player, Action.PHYSICAL_INTERACT)){
+				e.setCancelled(true);
+			}
+		}else if(!land.isBypassing(player, Action.OTHER_INTERACTS)) {
+			e.setCancelled(true);
 		}
 
 
@@ -114,17 +116,16 @@ public class InteractListener implements Listener {
 
 	@EventHandler
 	public void onFerilize(BlockFertilizeEvent e) {
+		Player player = e.getPlayer();
 		Block block = e.getBlock();
 
 		Chunk chunk = block.getChunk();
 		Land land = landmanager.getLandAt(chunk);
 
-		if(!(land instanceof SystemLand))
-			return;
-
-		//TODO param
-
-		e.setCancelled(true);
+		if(!land.isBypassing(player, Action.OTHER_INTERACTS)) {
+			e.setCancelled(true);
+		}
+		
 	}
 
 	@EventHandler(priority = EventPriority.LOW)
