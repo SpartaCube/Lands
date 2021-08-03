@@ -22,7 +22,9 @@ import fr.iban.lands.listeners.EntityBlockDamageListener;
 import fr.iban.lands.listeners.EntityExplodeListener;
 import fr.iban.lands.listeners.EntitySpawnListener;
 import fr.iban.lands.listeners.HangingListeners;
+import fr.iban.lands.listeners.HeadDatabaseListener;
 import fr.iban.lands.listeners.InteractListener;
+import fr.iban.lands.listeners.LandListeners;
 import fr.iban.lands.listeners.PistonListeners;
 import fr.iban.lands.listeners.PlayerMoveListener;
 import fr.iban.lands.listeners.PlayerTakeLecternBookListener;
@@ -30,12 +32,14 @@ import fr.iban.lands.listeners.ShopCreateListener;
 import fr.iban.lands.listeners.TeleportListener;
 import fr.iban.lands.storage.DbTables;
 import fr.iban.lands.storage.Storage;
+import fr.iban.lands.utils.Head;
 
 public final class LandsPlugin extends JavaPlugin {
 
 	private LandManager landManager;
 	private static LandsPlugin instance;
 	private List<UUID> bypass;
+
 
 	@Override
 	public void onEnable() {
@@ -74,12 +78,17 @@ public final class LandsPlugin extends JavaPlugin {
 				new CommandListener(this),
 				new HangingListeners(this),
 				new TeleportListener(this),
-				new DropListener(this)
+				new DropListener(this),
+				new LandListeners(this),
+				new HeadDatabaseListener()
 				);
 
 		if(getServer().getPluginManager().getPlugin("QuickShop") != null) {
 			getServer().getPluginManager().registerEvents(new ShopCreateListener(this), this);
 		}
+		
+		Head.loadAPI();
+
 	}
 
 	@Override

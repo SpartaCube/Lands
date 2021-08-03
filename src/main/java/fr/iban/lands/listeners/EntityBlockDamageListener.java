@@ -1,6 +1,5 @@
 package fr.iban.lands.listeners;
 
-import org.bukkit.Chunk;
 import org.bukkit.block.Block;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
@@ -24,8 +23,7 @@ public class EntityBlockDamageListener implements Listener {
 	public void onEntityDamageBlock(EntityChangeBlockEvent e) {
 		if(e.getEntityType() == EntityType.ENDERMAN || e.getEntityType() == EntityType.WITHER || e.getEntityType() == EntityType.ENDER_DRAGON) {
 			Block block = e.getBlock();
-			Chunk chunk = block.getChunk();
-			Land land = landmanager.getLandAt(chunk);
+			Land land = landmanager.getLandAt(block.getLocation());
 
 			if(land == null) 
 				return;

@@ -1,6 +1,5 @@
 package fr.iban.lands.listeners;
 
-import org.bukkit.Chunk;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -26,8 +25,7 @@ public class BlockPlaceListener implements Listener {
 	@EventHandler
 	public void onPlace(BlockPlaceEvent e) {
 		Block block = e.getBlock();
-		Chunk chunk = block.getChunk();
-		Land land = landmanager.getLandAt(chunk);
+		Land land = landmanager.getLandAt(block.getLocation());
 
 		if(land != null && !land.isBypassing(e.getPlayer(), Action.BLOCK_PLACE)) {
 			e.setCancelled(true);
@@ -39,8 +37,7 @@ public class BlockPlaceListener implements Listener {
 	@EventHandler
 	public void onPlayerBucketEmpty(PlayerBucketEmptyEvent e) {
 		Block block = e.getBlock();
-		Chunk chunk = block.getChunk();
-		Land land = landmanager.getLandAt(chunk);
+		Land land = landmanager.getLandAt(block.getLocation());
 
 		if(land != null && !land.isBypassing(e.getPlayer(), Action.BUCKET_EMPTY)) {
 			e.setCancelled(true);
@@ -50,8 +47,7 @@ public class BlockPlaceListener implements Listener {
 	@EventHandler
 	public void onPlayerBucketEmpty(PlayerBucketFillEvent e) {
 		Block block = e.getBlock();
-		Chunk chunk = block.getChunk();
-		Land land = landmanager.getLandAt(chunk);
+		Land land = landmanager.getLandAt(block.getLocation());
 
 		if(land != null && !land.isBypassing(e.getPlayer(), Action.BUCKET_FILL)) {
 			e.setCancelled(true);

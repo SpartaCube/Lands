@@ -1,6 +1,5 @@
 package fr.iban.lands.listeners;
 
-import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -22,8 +21,7 @@ public class DropListener implements Listener {
 	@EventHandler
 	public void onDrop(PlayerDropItemEvent e) {
 		Player player = e.getPlayer();
-		Chunk chunk = player.getChunk();
-		Land land = landmanager.getLandAt(chunk);
+		Land land = landmanager.getLandAt(player.getLocation());
 		
 		if(land == null) return;
 		

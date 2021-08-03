@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.enums.LandType;
 import fr.iban.lands.menus.LandMainMenu;
 
 public class LandsCMD implements CommandExecutor, TabCompleter {
@@ -32,19 +33,19 @@ public class LandsCMD implements CommandExecutor, TabCompleter {
 
 			if(args.length == 0 && plugin.getConfig().getBoolean("players-lands-enabled")) {
 				landManager.getLandsAsync(player).thenAccept(lands -> {
-					Bukkit.getScheduler().runTask(plugin, () -> new LandMainMenu(player, plugin, lands).open());	
+					Bukkit.getScheduler().runTask(plugin, () -> new LandMainMenu(player, plugin, lands, LandType.PLAYER).open());	
 				});		
 			}else if(args.length == 1 && player.hasPermission("lands.admin")) {
 				if(args[0].equalsIgnoreCase("system")) {
 					landManager.getSystemLandsAsync().thenAccept(lands -> {
-						Bukkit.getScheduler().runTask(plugin, () -> new LandMainMenu(player, plugin, lands, true).open());	
+						Bukkit.getScheduler().runTask(plugin, () -> new LandMainMenu(player, plugin, lands, LandType.SYSTEM).open());	
 					});	
 				}else {
 					@SuppressWarnings("deprecation")
 					OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
 					if(target.hasPlayedBefore()) {
 						landManager.getLandsAsync(target.getUniqueId()).thenAccept(lands -> {
-							Bukkit.getScheduler().runTask(plugin, () -> new LandMainMenu(player, plugin, lands).open());	
+							Bukkit.getScheduler().runTask(plugin, () -> new LandMainMenu(player, plugin, lands, LandType.PLAYER).open());	
 						});		
 					}else {
 						player.sendMessage("§cCe joueur n'est pas en ligne !");

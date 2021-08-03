@@ -12,6 +12,9 @@ import java.util.UUID;
 
 import javax.sql.DataSource;
 
+import org.bukkit.Bukkit;
+
+import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.common.data.sql.DbAccess;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.enums.Action;
@@ -21,7 +24,9 @@ import fr.iban.lands.enums.Link;
 import fr.iban.lands.objects.Land;
 import fr.iban.lands.objects.PlayerLand;
 import fr.iban.lands.objects.SChunk;
+import fr.iban.lands.objects.SubLand;
 import fr.iban.lands.objects.SystemLand;
+import fr.iban.lands.utils.Cuboid;
 
 public class Storage implements AbstractStorage {
 
@@ -62,7 +67,7 @@ public class Storage implements AbstractStorage {
 			try(PreparedStatement ps = connection.prepareStatement(
 					"SELECT L.idL, L.libelleL, TL.libelleTL, L.uuid " +
 							"FROM sc_lands L"
-							+ " JOIN sc_land_types TL ON L.idTL=TL.idTL;")){
+							+ " JOIN sc_land_types TL ON L.idTL=TL.idTL WHERE TL.libelleTL NOT LIKE 'SUBLAND';")){
 				try(ResultSet rs = ps.executeQuery()){
 					while(rs.next()) {
 						Land land;
@@ -72,16 +77,15 @@ public class Storage implements AbstractStorage {
 						if(type == LandType.PLAYER) {
 							UUID uuid = UUID.fromString(rs.getString("uuid"));
 							land = new PlayerLand(id, uuid, name);
-						}else if(type == LandType.SYSTEM){
-							land = new SystemLand(id, name);
 						}else {
-							land = new Land(id, name);
+							land = new SystemLand(id, name);
 						}
 						land.setId(id);
 						land.setName(name);
 						loadTrusts(land);
 						land.setFlags(getFlags(land));
 						land.setBans(getBans(land));
+						land.setSubLands(getSubLands(land));
 						lands.put(land.getId(), land);
 					}
 				}
@@ -107,15 +111,14 @@ public class Storage implements AbstractStorage {
 			e.printStackTrace();
 		}
 	}
-	
+
 	@Override
-	public void addSystemLand(SystemLand land) {
+	public void addLand(Land land) {
 		String sql = "INSERT INTO sc_lands (libelleL, idTL) VALUES(?, (SELECT idTL FROM sc_land_types WHERE libelleTL LIKE ?));";
 		try (Connection connection = ds.getConnection()) {
 			try(PreparedStatement ps = connection.prepareStatement(sql)){
 				ps.setString(1, land.getName());
-				ps.setString(2, LandType.SYSTEM.toString());
-
+				ps.setString(2, land.getType().toString());
 				ps.executeUpdate();
 			}
 		}catch (SQLException e) {
@@ -178,6 +181,9 @@ public class Storage implements AbstractStorage {
 			}
 		}catch (SQLException e) {
 			e.printStackTrace();
+		}
+		if(land.getType() == LandType.SUBLAND) {
+			deleteSubLandRegion((SubLand)land);
 		}
 	}
 
@@ -500,7 +506,6 @@ public class Storage implements AbstractStorage {
 				try(ResultSet rs = ps.executeQuery()){
 					while(rs.next()) {
 						bans.add(UUID.fromString(rs.getString("uuid")));
-
 					}
 				}
 			}
@@ -610,6 +615,106 @@ public class Storage implements AbstractStorage {
 		}catch (SQLException e) {
 			e.printStackTrace();
 		}	
+	}
+
+
+	@Override
+	public Map<Integer, SubLand> getSubLands(Land land) {
+		Map<Integer, SubLand>  sublands = new HashMap<>();
+		String sql = "SELECT * FROM sc_sublands SL JOIN sc_lands L ON SL.idSubLand=L.idL WHERE SL.idLand=?;";
+		try(Connection connection = ds.getConnection()){
+			try(PreparedStatement ps = connection.prepareStatement(sql)){
+				ps.setInt(1, land.getId());
+				try(ResultSet rs = ps.executeQuery()){
+					while(rs.next()) {
+						int idSL = rs.getInt("idSubLand");
+						String name = rs.getString("libelleL");
+						String server = rs.getString("server");
+						String world = rs.getString("world");
+						
+						int x1 = rs.getInt("x1");
+						int y1 = rs.getInt("y1");
+						int z1 = rs.getInt("z1");
+
+						int x2 = rs.getInt("x2");
+						int y2 = rs.getInt("y2");
+						int z2 = rs.getInt("z2");
+						
+						SubLand subland = new SubLand(land, idSL, name);
+						if(server.equals(CoreBukkitPlugin.getInstance().getServerName())) {
+							subland.setCuboid(new Cuboid(Bukkit.getWorld(world), x1, y1, z1, x2, y2, z2), server);
+						}
+						loadTrusts(subland);
+						subland.setFlags(getFlags(subland));
+						subland.setBans(getBans(subland));
+						sublands.put(idSL, subland);
+					}
+				}
+			}
+		}catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return sublands;	
+	}
+
+
+	@Override
+	public void setSubLandRegion(Land land, SubLand subland) {
+		String sql = "INSERT INTO sc_sublands (idSubLand, idLand, server, world, x1, y1, z1, x2, y2, z2) VALUES("
+				+ "?, ?, ?, ?, ?, ?, ? ,? ,? ,?) ON DUPLICATE KEY UPDATE server=VALUES(server), world=VALUES(world),"
+				+ "x1=VALUES(x1), y1=VALUES(y1), z1=VALUES(z1), x2=VALUES(x2), y2=VALUES(y2), z2=VALUES(z2);";
+		try (Connection connection = ds.getConnection()) {
+			try(PreparedStatement ps = connection.prepareStatement(sql)){
+				ps.setInt(1, subland.getId());
+				ps.setInt(2, land.getId());
+				Cuboid cuboid = subland.getCuboid();
+				ps.setString(3, subland.getServer());
+				ps.setString(4, cuboid.getWorld().getName());
+				ps.setInt(5, cuboid.getLowerX());
+				ps.setInt(6, cuboid.getLowerY());
+				ps.setInt(7, cuboid.getLowerZ());
+				ps.setInt(8, cuboid.getUpperX());
+				ps.setInt(9, cuboid.getUpperY());
+				ps.setInt(10, cuboid.getUpperZ());
+				ps.executeUpdate();
+			}
+		}catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+
+	@Override
+	public void deleteSubLandRegion(SubLand land) {
+		try (Connection connection = ds.getConnection()) {
+			try(PreparedStatement ps = connection.prepareStatement(
+					"DELETE FROM sc_sublands "
+							+ "WHERE idSubLand=?;")){
+				ps.setInt(1, land.getId());
+				ps.executeUpdate();
+			}	
+		}catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Override
+	public int getLastId(LandType type) {
+		String sql = "SELECT max(idL) FROM sc_lands L JOIN sc_land_types TL ON TL.idTL=L.idTL WHERE TL.libelleTL=? LIMIT 1;";  
+		int id = 0;
+		try(Connection connection = ds.getConnection()){
+			try(PreparedStatement ps = connection.prepareStatement(sql)){
+				ps.setString(1, type.toString());
+				try(ResultSet rs = ps.executeQuery()){
+					while(rs.next()) {
+						id = rs.getInt("max(idL)");
+					}
+				}
+			}
+		}catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return id;
 	}
 
 

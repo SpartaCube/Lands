@@ -12,13 +12,12 @@ import org.bukkit.inventory.ItemStack;
 
 import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.bukkitcore.menu.PaginatedMenu;
-import fr.iban.bukkitcore.utils.Head;
 import fr.iban.bukkitcore.utils.ItemBuilder;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Flag;
-import fr.iban.lands.enums.LandType;
 import fr.iban.lands.objects.Land;
+import fr.iban.lands.utils.Head;
 
 public class LandSettingsMenu extends PaginatedMenu{
 
@@ -31,7 +30,7 @@ public class LandSettingsMenu extends PaginatedMenu{
 		super(player);
 		this.land = land;
 		this.manager = manager;
-		if(land.getType() == LandType.SYSTEM) {
+		if(player.hasPermission("lands.systemflags")) {
 			flags = Arrays.stream(Flag.values()).collect(Collectors.toList());
 		}else {
 			flags = Arrays.stream(Flag.values()).filter(flag -> !flag.isSystem()).collect(Collectors.toList());

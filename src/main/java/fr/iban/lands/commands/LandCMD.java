@@ -24,6 +24,7 @@ import fr.iban.lands.objects.SystemLand;
 import fr.iban.lands.utils.ChatUtils;
 import fr.iban.lands.utils.LandMap;
 import fr.iban.lands.utils.SeeChunks;
+import net.kyori.adventure.text.Component;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -91,13 +92,13 @@ public class LandCMD implements CommandExecutor, TabCompleter {
 				Player target = Bukkit.getPlayer(args[1]);
 				if(target != null ) {
 					if(target.getUniqueId() != player.getUniqueId()) {
-						Land land = landManager.getLandAt(target.getChunk());
+						Land land = landManager.getLandAt(target.getLocation());
 						if(land instanceof PlayerLand) {
 							PlayerLand pland = (PlayerLand)land;
 							if(pland.getOwner().equals(player.getUniqueId())) {
 								target.teleportAsync(Bukkit.getWorld("world").getSpawnLocation());
 								target.sendMessage("§cVous avez été expulsé du territoire de " + player.getName());
-								player.sendActionBar("§aLe joueur a bien été expulsé.");
+								player.sendActionBar(Component.text("§aLe joueur a bien été expulsé."));
 							}else {
 								player.sendMessage("§cLe joueur n'est pas dans votre territoire !");
 							}

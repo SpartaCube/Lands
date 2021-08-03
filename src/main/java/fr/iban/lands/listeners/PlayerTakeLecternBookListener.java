@@ -1,6 +1,5 @@
 package fr.iban.lands.listeners;
 
-import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -23,8 +22,7 @@ public class PlayerTakeLecternBookListener implements Listener {
 	@EventHandler
 	public void onTakeBook(PlayerTakeLecternBookEvent e) {
 		Player player = e.getPlayer();
-		Chunk chunk = e.getLectern().getChunk();
-		Land land = landManager.getLandAt(chunk);
+		Land land = landManager.getLandAt(e.getLectern().getLocation());
 		if(land != null && !land.isBypassing(player, Action.LECTERN_TAKE)) {
 			e.setCancelled(true);
 		}

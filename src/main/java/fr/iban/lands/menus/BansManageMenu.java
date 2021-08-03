@@ -15,10 +15,10 @@ import org.bukkit.inventory.meta.SkullMeta;
 import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.bukkitcore.menu.ConfirmMenu;
 import fr.iban.bukkitcore.menu.PaginatedMenu;
-import fr.iban.bukkitcore.utils.Head;
 import fr.iban.bukkitcore.utils.ItemBuilder;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.objects.Land;
+import fr.iban.lands.utils.Head;
 
 public class BansManageMenu extends PaginatedMenu {
 

@@ -117,6 +117,20 @@ public class DbTables {
 				"    CONSTRAINT PK_chunks PRIMARY KEY (`server`, world, x, z),\n" + 
 				"    CONSTRAINT FK_chunks_lands FOREIGN KEY (idL) REFERENCES sc_lands(idL)\n" + 
 				");");
+		createTable("CREATE TABLE IF NOT EXISTS sc_sublands(\n" + 
+				"    idSubLand INT NOT NULL,\n" + 
+				"    idLand INT NOT NULL,\n" + 
+				"    `server` VARCHAR(255),\n" + 
+				"    `world` VARCHAR(255),\n" + 
+				"    x1 INT ,\n" + 
+				"    y1 INT ,\n" + 
+				"    z1 INT ,\n" + 
+				"    x2 INT ,\n" + 
+				"    y2 INT ,\n" + 
+				"    z2 INT ,\n" + 
+				"    CONSTRAINT PK_sublands PRIMARY KEY (idSubland),\n" + 
+				"    CONSTRAINT FK_sublands_lands FOREIGN KEY (idLand) REFERENCES sc_lands(idL)\n" + 
+				");");
 		for (Action action : Action.values()) {
 			insertLandAction(action);
 		}

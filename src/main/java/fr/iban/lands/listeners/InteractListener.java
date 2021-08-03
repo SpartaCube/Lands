@@ -1,6 +1,5 @@
 package fr.iban.lands.listeners;
 
-import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Openable;
@@ -44,8 +43,7 @@ public class InteractListener implements Listener {
 		if(block == null)
 			return;
 
-		Chunk chunk = block.getChunk();
-		Land land = landmanager.getLandAt(chunk);
+		Land land = landmanager.getLandAt(block.getLocation());
 
 		if(land == null)
 			return;
@@ -81,31 +79,25 @@ public class InteractListener implements Listener {
 					|| (block.getType() == Material.BREWING_STAND && !land.isBypassing(player, Action.BREWING_STAND_INTERACT))
 					|| (block.getBlockData() instanceof Powerable && !land.isBypassing(player, Action.USE))
 					|| (block.getBlockData() instanceof Bed && !land.isBypassing(player, Action.USE_BED))
+					|| ((block.getType() == Material.DRAGON_EGG || (block.getType().name().startsWith("POTTED_") || block.getType() == Material.FLOWER_POT)) && !land.isBypassing(player, Action.OTHER_INTERACTS))
 					|| ((block.getState() instanceof InventoryHolder || block.getType() == Material.JUKEBOX) && !land.isBypassing(player, Action.OPEN_CONTAINER))
-					|| !land.isBypassing(player, Action.OTHER_INTERACTS)) {
+					|| ((player.getInventory().getItemInMainHand().getType().toString().contains("SPAWN_EGG") || player.getInventory().getItemInOffHand().getType().toString().contains("SPAWN_EGG")) && !land.isBypassing(player, Action.OTHER_INTERACTS))) {
 				e.setCancelled(true);
 			}
 		}else if(e.getAction() == org.bukkit.event.block.Action.LEFT_CLICK_BLOCK) {
-			if(!land.isBypassing(player, Action.OTHER_INTERACTS)){
+			if(block.getType() == Material.DRAGON_EGG && !land.isBypassing(player, Action.OTHER_INTERACTS)){
 				e.setCancelled(true);
 			}
-		}else if(e.getAction() == org.bukkit.event.block.Action.PHYSICAL) {
-			if(!land.isBypassing(player, Action.PHYSICAL_INTERACT)){
-				e.setCancelled(true);
-			}
-		}else if(!land.isBypassing(player, Action.OTHER_INTERACTS)) {
+		}else if(e.getAction() == org.bukkit.event.block.Action.PHYSICAL && !land.isBypassing(player, Action.PHYSICAL_INTERACT)){
 			e.setCancelled(true);
 		}
-
 
 	}
 
 	@EventHandler
 	public void onEntityInteract(EntityInteractEvent e) {
 		Block block = e.getBlock();
-
-		Chunk chunk = block.getChunk();
-		Land land = landmanager.getLandAt(chunk);
+		Land land = landmanager.getLandAt(block.getLocation());
 
 		if(land != null && e.getEntityType() != EntityType.VILLAGER) {
 			e.setCancelled(true);
@@ -117,21 +109,22 @@ public class InteractListener implements Listener {
 	@EventHandler
 	public void onFerilize(BlockFertilizeEvent e) {
 		Player player = e.getPlayer();
+		
+		if(player == null) return;
+		
 		Block block = e.getBlock();
 
-		Chunk chunk = block.getChunk();
-		Land land = landmanager.getLandAt(chunk);
+		Land land = landmanager.getLandAt(block.getLocation());
 
 		if(!land.isBypassing(player, Action.OTHER_INTERACTS)) {
 			e.setCancelled(true);
 		}
-		
+
 	}
 
 	@EventHandler(priority = EventPriority.LOW)
 	public void onInteractAtEntity(PlayerInteractEntityEvent e) {
-		Chunk chunk = e.getRightClicked().getChunk();
-		Land land = landmanager.getLandAt(chunk);
+		Land land = landmanager.getLandAt(e.getRightClicked().getLocation());
 
 		if(land == null) {
 			return;
@@ -143,8 +136,7 @@ public class InteractListener implements Listener {
 
 	@EventHandler
 	public void onInteractAtEntity(PlayerInteractAtEntityEvent e) {
-		Chunk chunk = e.getRightClicked().getChunk();
-		Land land = landmanager.getLandAt(chunk);
+		Land land = landmanager.getLandAt(e.getRightClicked().getLocation());
 		if(land == null) {
 			return;
 		}
@@ -152,14 +144,14 @@ public class InteractListener implements Listener {
 			e.setCancelled(true);
 		}
 	}
-	
+
 	@EventHandler
 	public void onLeash(PlayerLeashEntityEvent e) {
 		Player player = e.getPlayer();
-		Land land = landmanager.getLandAt(e.getEntity().getChunk());
-		
+		Land land = landmanager.getLandAt(e.getEntity().getLocation());
+
 		if(land == null) return;
-		
+
 		if(!land.isBypassing(player, Action.LEASH)) {
 			e.setCancelled(true);
 		}

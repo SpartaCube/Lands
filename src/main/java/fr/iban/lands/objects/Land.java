@@ -6,16 +6,20 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.enums.LandType;
 import fr.iban.lands.enums.Link;
+import net.kyori.adventure.text.Component;
 
-public class Land {
+public abstract class Land {
 
 	protected int id;
 	protected String name;
@@ -24,8 +28,9 @@ public class Land {
 	protected Map<UUID, Trust> trusts = new HashMap<>();
 	protected Set<Flag> flags = new HashSet<>();
 	protected Set<UUID> bans = new HashSet<>();
-	private Map<Link, Land> links;
-
+	protected Map<Link, Land> links;
+	protected Map<Integer, SubLand> subLands = new ConcurrentHashMap<>();
+	
 	public Land(int id, String name) {
 		this.id = id;
 		this.name = name;
@@ -38,6 +43,8 @@ public class Land {
 	public void setId(int id) {
 		this.id = id;
 	}
+	
+	public abstract @Nullable UUID getOwner();
 	
 	public String getName() {
 		if(name == null) {
@@ -58,6 +65,9 @@ public class Land {
 		this.type = type;
 	}
 	
+	public boolean isWilderness() {
+		return this instanceof SystemLand && getName().equals("Zone sauvage");
+	}
 	
 	/*
 	 * TRUSTS
@@ -119,8 +129,9 @@ public class Land {
 	public boolean isBypassing(Player player, Action action) {
 		UUID uuid = player.getUniqueId();
 		boolean bypass = getGlobalTrust().hasPermission(action) || isTrusted(uuid, action) || LandsPlugin.getInstance().isBypassing(player);
-		if(!bypass && this instanceof PlayerLand)
-			player.sendActionBar("§cVous n'avez pas la permission de faire cela dans ce claim.");
+		if((!bypass) && this instanceof PlayerLand) {
+			player.sendActionBar(Component.text("§cVous n'avez pas la permission de faire cela dans ce claim."));
+		}
 		return bypass;
 	}
 
@@ -182,5 +193,27 @@ public class Land {
 		}
 		return land;
 	}
-
+	
+	public boolean hasSubLand() {
+		return type != LandType.SUBLAND && getSubLands() != null && !getSubLands().isEmpty();
+	}
+	
+	public SubLand getSubLandAt(Location loc) {
+		if(hasSubLand()) {
+			for(SubLand subland : subLands.values()) {
+				if(subland.getCuboid() != null && subland.getServer() != null && subland.getCuboid().contains(loc)) {
+					return subland;
+				}
+			}
+		}
+		return null;
+	}
+	
+	public void setSubLands(Map<Integer, SubLand> subLands) {
+		this.subLands = subLands;
+	}
+	
+	public Map<Integer, SubLand> getSubLands() {
+		return subLands;
+	}
 }

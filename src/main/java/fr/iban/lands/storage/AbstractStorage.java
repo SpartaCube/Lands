@@ -12,7 +12,7 @@ import fr.iban.lands.enums.Link;
 import fr.iban.lands.objects.Land;
 import fr.iban.lands.objects.PlayerLand;
 import fr.iban.lands.objects.SChunk;
-import fr.iban.lands.objects.SystemLand;
+import fr.iban.lands.objects.SubLand;
 
 public interface AbstractStorage {
 		
@@ -28,7 +28,7 @@ public interface AbstractStorage {
 	
 	void addPlayerLand(PlayerLand land);
 	
-	void addSystemLand(SystemLand land);
+	void addLand(Land land);
 	
 	void deleteLand(Land land);
 	
@@ -37,7 +37,7 @@ public interface AbstractStorage {
 	int getLandID(LandType type, UUID uuid, String name);
 	
 	int getSystemLandID(String name);
-	
+		
 	void setChunk(Land land, SChunk chunk);
 	
 	void removeChunk(SChunk chunk);
@@ -69,5 +69,14 @@ public interface AbstractStorage {
 	void addLink(Land land, Link link, Land with);
 	
 	void removeLink(Land land, Link link);
+			
+	Map<Integer, SubLand> getSubLands(Land land);
+
+	void setSubLandRegion(Land land, SubLand subland);
+
+	void deleteSubLandRegion(SubLand land);
+
+	int getLastId(LandType type);
+
 	
 }

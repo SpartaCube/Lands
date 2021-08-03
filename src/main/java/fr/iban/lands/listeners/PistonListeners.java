@@ -1,6 +1,5 @@
 package fr.iban.lands.listeners;
 
-import org.bukkit.Chunk;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -20,11 +19,10 @@ public class PistonListeners implements Listener {
 	
 	@EventHandler
 	public void onPiston(BlockPistonExtendEvent e) {
-		Land pistonLand= landmanager.getLandAt(e.getBlock().getChunk());
+		Land pistonLand= landmanager.getLandAt(e.getBlock().getLocation());
 
 		for(Block block : e.getBlocks()) {
-			Chunk chunk = block.getRelative(e.getDirection()).getChunk();
-			Land land = landmanager.getLandAt(chunk);
+			Land land = landmanager.getLandAt(block.getRelative(e.getDirection()).getLocation());
 
 			if(land == null || land == pistonLand) 
 				continue;

@@ -88,7 +88,7 @@ public class SeeChunks {
 		if(!manager.getLandAt(nordest.clone().add(0,0,-1).getChunk()).equals(land) || !manager.getLandAt(nordest.clone().add(1,0,0).getChunk()).equals(land)) {
 			corners.add(nordest);
 		}
-		
+				
 		if(corners.contains(sudwest) && corners.contains(nordwest)) {
 			Location mid = new Location(chunk.getWorld(), (sudwest.getX()+nordwest.getX())/2, 0, (sudwest.getZ()+nordwest.getZ())/2);
 			if(!land.equals(manager.getLandAt(mid.clone().add(-1, 0, 0).getChunk()))) {
