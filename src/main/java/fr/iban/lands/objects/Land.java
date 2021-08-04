@@ -12,6 +12,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
+import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
@@ -201,7 +202,7 @@ public abstract class Land {
 	public SubLand getSubLandAt(Location loc) {
 		if(hasSubLand()) {
 			for(SubLand subland : subLands.values()) {
-				if(subland.getCuboid() != null && subland.getServer() != null && subland.getCuboid().contains(loc)) {
+				if(subland.getCuboid() != null && subland.getServer() != null && subland.getServer().equals(CoreBukkitPlugin.getInstance().getServerName()) && subland.getCuboid().contains(loc)) {
 					return subland;
 				}
 			}

@@ -14,7 +14,6 @@ import javax.sql.DataSource;
 
 import org.bukkit.Bukkit;
 
-import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.common.data.sql.DbAccess;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.enums.Action;
@@ -631,7 +630,7 @@ public class Storage implements AbstractStorage {
 						String name = rs.getString("libelleL");
 						String server = rs.getString("server");
 						String world = rs.getString("world");
-						
+
 						int x1 = rs.getInt("x1");
 						int y1 = rs.getInt("y1");
 						int z1 = rs.getInt("z1");
@@ -639,11 +638,9 @@ public class Storage implements AbstractStorage {
 						int x2 = rs.getInt("x2");
 						int y2 = rs.getInt("y2");
 						int z2 = rs.getInt("z2");
-						
+
 						SubLand subland = new SubLand(land, idSL, name);
-						if(server.equals(CoreBukkitPlugin.getInstance().getServerName())) {
-							subland.setCuboid(new Cuboid(Bukkit.getWorld(world), x1, y1, z1, x2, y2, z2), server);
-						}
+						subland.setCuboid(new Cuboid(Bukkit.getWorld(world), x1, y1, z1, x2, y2, z2), server);
 						loadTrusts(subland);
 						subland.setFlags(getFlags(subland));
 						subland.setBans(getBans(subland));
@@ -697,7 +694,7 @@ public class Storage implements AbstractStorage {
 			e.printStackTrace();
 		}
 	}
-	
+
 	@Override
 	public int getLastId(LandType type) {
 		String sql = "SELECT max(idL) FROM sc_lands L JOIN sc_land_types TL ON TL.idTL=L.idTL WHERE TL.libelleTL=? LIMIT 1;";  
