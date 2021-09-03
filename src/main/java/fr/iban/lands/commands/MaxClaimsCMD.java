@@ -6,8 +6,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
-import fr.iban.common.data.Account;
 import fr.iban.common.data.AccountProvider;
+import fr.iban.spartacube.data.Account;
 
 public class MaxClaimsCMD implements CommandExecutor {
 

@@ -1,8 +1,14 @@
 package fr.iban.lands.listeners;
 
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import com.sun.org.apache.xml.internal.utils.SuballocatedByteVector;
+import fr.iban.lands.events.LandFlagChangeEvent;
+import fr.iban.lands.objects.SChunk;
+import fr.iban.lands.objects.SubLand;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -67,4 +73,27 @@ public class LandListeners implements Listener {
 		
 	}
 
+	@EventHandler
+	public void onFlagChange(LandFlagChangeEvent e) {
+		Player player = e.getPlayer();
+
+		if (e.getFlag() == Flag.SILENT_MOBS) {
+			if (e.getLand() instanceof SubLand) {
+				player.sendMessage("§cFlag non supporté sur les sous territoires.");
+				e.setCancelled(true);
+				return;
+			}
+			AtomicInteger count = new AtomicInteger();
+			player.sendMessage("§aChangement d'état des mobs...");
+			for (SChunk schunk : plugin.getLandManager().getChunks(e.getLand())) {
+				schunk.getChunkAsync().thenAccept(chunk -> {
+					for (Entity entity : chunk.getEntities()) {
+						entity.setSilent(e.getNewState());
+						count.getAndIncrement();
+					}
+				});
+			}
+			player.sendMessage("§a" + count.get() + " mobs sont maintenant " + (e.getNewState() ? "silencieux" : "bruyants"));
+		}
+	}
 }

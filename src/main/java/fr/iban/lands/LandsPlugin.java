@@ -28,6 +28,7 @@ import fr.iban.lands.listeners.LandListeners;
 import fr.iban.lands.listeners.PistonListeners;
 import fr.iban.lands.listeners.PlayerMoveListener;
 import fr.iban.lands.listeners.PlayerTakeLecternBookListener;
+import fr.iban.lands.listeners.PortalListeners;
 import fr.iban.lands.listeners.ShopCreateListener;
 import fr.iban.lands.listeners.TeleportListener;
 import fr.iban.lands.storage.DbTables;
@@ -80,7 +81,8 @@ public final class LandsPlugin extends JavaPlugin {
 				new TeleportListener(this),
 				new DropListener(this),
 				new LandListeners(this),
-				new HeadDatabaseListener()
+				new HeadDatabaseListener(),
+				new PortalListeners(this)
 				);
 
 		if(getServer().getPluginManager().getPlugin("QuickShop") != null) {

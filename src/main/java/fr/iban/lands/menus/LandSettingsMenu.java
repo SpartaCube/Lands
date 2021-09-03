@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import fr.iban.lands.events.LandFlagChangeEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -68,9 +69,19 @@ public class LandSettingsMenu extends PaginatedMenu{
 		}
 		
 		if(item.getItemMeta().getDisplayName().startsWith("§4")) {
-			manager.addFlag(land, Flag.getByDisplayName(item.getItemMeta().getDisplayName()));
+			Flag flag = Flag.getByDisplayName(item.getItemMeta().getDisplayName());
+			LandFlagChangeEvent event = new LandFlagChangeEvent(player, land, flag, true);
+			Bukkit.getPluginManager().callEvent(event);
+			if(!event.isCancelled()){
+				manager.addFlag(land, flag);
+			}
 		}else {
-			manager.removeFlag(land, Flag.getByDisplayName(item.getItemMeta().getDisplayName()));
+			Flag flag = Flag.getByDisplayName(item.getItemMeta().getDisplayName());
+			LandFlagChangeEvent event = new LandFlagChangeEvent(player, land, flag, false);
+			Bukkit.getPluginManager().callEvent(event);
+			if(!event.isCancelled()){
+				manager.removeFlag(land, flag);
+			}
 		}
 		
 		if(displayNameEquals(item, "§2Liens")) {

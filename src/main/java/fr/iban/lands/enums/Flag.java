@@ -14,8 +14,8 @@ public enum Flag {
 	AUTO_REPLANT("Active l'auto replantation", new ItemStack(Material.GOLDEN_SHOVEL), true),
 	DOORS_AUTOCLOSE("Active la fermeture automatique des portes", new ItemStack(Material.OAK_DOOR), true),
 	NO_MOB_SPAWNING("Désactive le spawn des mobs", new ItemStack(Material.ZOMBIE_SPAWN_EGG), true),
+	SILENT_MOBS("Désactive le bruit des mobs de ce territoire", new ItemStack(Material.JUKEBOX), false),
 	INVISIBLE("Rend les joueurs à l'intérieur invisibles.", new ItemStack(Material.POTION), true);
-	
 	
 	private String displayName;
 	private ItemStack item;

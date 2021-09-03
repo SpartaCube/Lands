@@ -9,7 +9,7 @@
 	<version>1.0</version>
 	<packaging>jar</packaging>
 
-	<name>Regions</name>
+	<name>Lands</name>
 
 	<description>Plugin de protections</description>
 	<properties>
@@ -81,8 +81,8 @@
 			<scope>provided</scope>
 		</dependency>
  		<dependency>
-			<groupId>fr.iban</groupId>
-			<artifactId>CorePaper</artifactId>
+			<groupId>fr.iban.spartacube</groupId>
+			<artifactId>Core-paper</artifactId>
 			<version>1.0</version>
 			<scope>provided</scope>
 		</dependency>

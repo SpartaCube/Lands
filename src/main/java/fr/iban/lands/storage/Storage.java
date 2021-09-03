@@ -640,7 +640,9 @@ public class Storage implements AbstractStorage {
 						int z2 = rs.getInt("z2");
 
 						SubLand subland = new SubLand(land, idSL, name);
-						subland.setCuboid(new Cuboid(Bukkit.getWorld(world), x1, y1, z1, x2, y2, z2), server);
+						if(Bukkit.getWorld(world) != null) {
+							subland.setCuboid(new Cuboid(Bukkit.getWorld(world), x1, y1, z1, x2, y2, z2), server);
+						}
 						loadTrusts(subland);
 						subland.setFlags(getFlags(subland));
 						subland.setBans(getBans(subland));

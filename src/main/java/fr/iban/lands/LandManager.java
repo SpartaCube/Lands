@@ -327,7 +327,6 @@ public class LandManager {
 		return future(() -> getMaxChunkCount(player) - getChunkCount(player).get());
 	}
 
-
 	/*
 	 * Retourne la liste des chunks d'un territoire.
 	 */
@@ -348,12 +347,9 @@ public class LandManager {
 		return chunks;
 	}
 
-
-
 	/*
 	 * TRUST / UNTRUST
 	 */
-
 
 	public void addTrust(Land land, UUID uuid, Action action) {
 		land.trust(uuid, action);

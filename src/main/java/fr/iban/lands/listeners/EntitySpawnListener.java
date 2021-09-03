@@ -9,6 +9,7 @@ import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.objects.Land;
+import org.bukkit.event.entity.EntitySpawnEvent;
 
 public class EntitySpawnListener implements Listener {
 
@@ -22,10 +23,19 @@ public class EntitySpawnListener implements Listener {
 	public void onCreatureSpawn(CreatureSpawnEvent e){
 		if(e.getSpawnReason() != SpawnReason.SPAWNER) {
 			Land land = landmanager.getLandAt(e.getLocation());
-			if(land != null && land.hasFlag(Flag.NO_MOB_SPAWNING)) {
-				e.setCancelled(true);
+			if(land != null){
+				if(land.hasFlag(Flag.NO_MOB_SPAWNING)) {
+					e.setCancelled(true);
+					return;
+				}
 			}
 		}
+	}
+
+	@EventHandler
+	public void onEntitySpawn(EntitySpawnEvent e){
+		Land land = landmanager.getLandAt(e.getLocation());
+		e.getEntity().setSilent(land.hasFlag(Flag.SILENT_MOBS));
 	}
 
 }

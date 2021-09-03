@@ -24,7 +24,7 @@ public class PistonListeners implements Listener {
 		for(Block block : e.getBlocks()) {
 			Land land = landmanager.getLandAt(block.getRelative(e.getDirection()).getLocation());
 
-			if(land == null || land == pistonLand) 
+			if(land.isWilderness() || land == pistonLand || (land.getOwner() != null && pistonLand.getOwner() != null && land.getOwner().equals(pistonLand.getOwner())))
 				continue;
 
 			e.setCancelled(true);

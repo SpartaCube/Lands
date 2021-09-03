@@ -89,9 +89,15 @@ public class LandManageMenu extends Menu {
 			if(cuboid != null) {
 				inventory.setItem(10, new ItemBuilder(Head.CHEST_DIRT.get()).setDisplayName("§2Zone protégée :")
 						.addLore("§7Serveur : " + subland.getServer())
+						.addLore(String.format("§7Monde : x: %s", cuboid.getWorld().getName()))
 						.addLore(String.format("§7Position 1 : x: %d y: %d z:%d", cuboid.getUpperX(), cuboid.getUpperY(), cuboid.getUpperZ()))
 						.addLore(String.format("§7Position 2 : x: %d y: %d z:%d", cuboid.getLowerX(), cuboid.getLowerY(), cuboid.getLowerZ()))
 						.addLore("§aCliquez pour redéfinir la zone protégée.")
+						.build());
+			}else if(subland.getServer() != null){
+				inventory.setItem(10, new ItemBuilder(Head.CHEST_DIRT.get()).setDisplayName("§2Zone protégée :")
+						.addLore("§cDéfini sur le serveur : " + subland.getServer())
+						.addLore("§aCliquez pour définir la zone protégée.")
 						.build());
 			}else {
 				inventory.setItem(10, new ItemBuilder(Head.CHEST_DIRT.get()).setDisplayName("§2Zone protégée :")

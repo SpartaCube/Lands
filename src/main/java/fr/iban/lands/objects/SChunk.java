@@ -4,6 +4,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 
 import fr.iban.bukkitcore.CoreBukkitPlugin;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.concurrent.CompletableFuture;
 
 public class SChunk {
 
@@ -61,6 +64,10 @@ public class SChunk {
 
 	public Chunk getChunk() {
 		return Bukkit.getWorld(world).getChunkAt(x, z);
+	}
+
+	public @NotNull CompletableFuture<Chunk> getChunkAsync() {
+		return Bukkit.getWorld(world).getChunkAtAsync(x, z);
 	}
 
 	@Override
