@@ -17,6 +17,7 @@ public class PlayerLand extends Land {
 		setType(LandType.PLAYER);
 	}
 	
+	@Override
 	public UUID getOwner() {
 		return owner;
 	}

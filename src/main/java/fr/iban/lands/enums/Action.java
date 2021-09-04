@@ -23,7 +23,7 @@ public enum Action {
 	ENTITY_INTERACT("Interagir avec les entités (ex: villagois)", new ItemStack(Material.EMERALD)),
 	LECTERN_TAKE("Prendre les livres sur les pupitres", new ItemStack(Material.LECTERN)),
 	BREWING_STAND_INTERACT("Utiliser les alambics", new ItemStack(Material.BREWING_STAND)),
-	PHYSICAL_INTERACT("Intéractions physiques (plaques de pression, crochets...)", new ItemStack(Material.OAK_PRESSURE_PLATE)),
+	PHYSICAL_INTERACT("Interactions physiques (plaques de pression, crochets...)", new ItemStack(Material.OAK_PRESSURE_PLATE)),
 	OTHER_INTERACTS("Autres interactions (oeuf de dragon, pot de fleur, poudre d'os...)", new ItemStack(Material.DRAGON_EGG)),
 	DROP("Jeter des items", new ItemStack(Material.ROTTEN_FLESH)),
 	LEASH("Attacher un animal avec une laisse.", new ItemStack(Material.LEAD))

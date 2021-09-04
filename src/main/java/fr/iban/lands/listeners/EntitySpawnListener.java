@@ -1,6 +1,5 @@
 package fr.iban.lands.listeners;
 
-import org.bukkit.Chunk;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -10,6 +9,7 @@ import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Flag;
 import fr.iban.lands.objects.Land;
+import org.bukkit.event.entity.EntitySpawnEvent;
 
 public class EntitySpawnListener implements Listener {
 
@@ -21,13 +21,21 @@ public class EntitySpawnListener implements Listener {
 
 	@EventHandler
 	public void onCreatureSpawn(CreatureSpawnEvent e){
-		Chunk chunk = e.getLocation().getChunk();
 		if(e.getSpawnReason() != SpawnReason.SPAWNER) {
-			Land land = landmanager.getLandAt(chunk);
-			if(land != null && land.hasFlag(Flag.NO_MOB_SPAWNING)) {
-				e.setCancelled(true);
+			Land land = landmanager.getLandAt(e.getLocation());
+			if(land != null){
+				if(land.hasFlag(Flag.NO_MOB_SPAWNING)) {
+					e.setCancelled(true);
+					return;
+				}
 			}
 		}
+	}
+
+	@EventHandler
+	public void onEntitySpawn(EntitySpawnEvent e){
+		Land land = landmanager.getLandAt(e.getLocation());
+		e.getEntity().setSilent(land.hasFlag(Flag.SILENT_MOBS));
 	}
 
 }

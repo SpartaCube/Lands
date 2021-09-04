@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import com.github.benmanes.caffeine.cache.Cache;
@@ -26,13 +27,17 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import fr.iban.common.data.AccountProvider;
 import fr.iban.lands.enums.Action;
 import fr.iban.lands.enums.Flag;
+import fr.iban.lands.enums.LandType;
 import fr.iban.lands.enums.Link;
 import fr.iban.lands.objects.Land;
 import fr.iban.lands.objects.PlayerLand;
 import fr.iban.lands.objects.SChunk;
+import fr.iban.lands.objects.SubLand;
 import fr.iban.lands.objects.SystemLand;
 import fr.iban.lands.storage.AbstractStorage;
+import fr.iban.lands.utils.Cuboid;
 import fr.iban.lands.utils.LandMap;
+import net.kyori.adventure.text.Component;
 
 public class LandManager {
 
@@ -90,7 +95,6 @@ public class LandManager {
 		return lands;
 	}
 
-	
 	/*
 	 * Retourne la liste de toutes les territoires d'un joueur.
 	 */
@@ -164,10 +168,6 @@ public class LandManager {
 		});
 	}
 
-	public boolean isWilderness(Land land) {
-		return land instanceof SystemLand && land.getName().equals("Zone sauvage");
-	}
-
 	//Retourne le territoire du nom donné pour le joueur donné.
 	public CompletableFuture<PlayerLand> getPlayerFirstLand(Player player) {
 		return future(() ->  {
@@ -225,7 +225,7 @@ public class LandManager {
 				return null;
 			}
 			SystemLand land = new SystemLand(-1, name);
-			storage.addSystemLand(land);
+			storage.addLand(land);
 			int id = storage.getSystemLandID(name);
 			land.setId(id);
 			getLands().put(id, land);
@@ -239,7 +239,7 @@ public class LandManager {
 	public CompletableFuture<Void> saveWilderness(SystemLand land) {
 		return future(() -> {
 			getLands().put(-1, land);
-			storage.addSystemLand(land);
+			storage.addLand(land);
 		});
 	}
 
@@ -255,7 +255,7 @@ public class LandManager {
 			getLands().put(id, land);
 			land.setBans(new HashSet<>());
 			land.setFlags(new HashSet<>());
-			Bukkit.broadcastMessage("§aLe territoire au nom de " + name + " pour " + Bukkit.getOfflinePlayer(uuid).getName() + " a été créée.");
+			Bukkit.broadcast(Component.text("§aLe territoire au nom de " + name + " pour " + Bukkit.getOfflinePlayer(uuid).getName() + " a été créée."));
 			return land;
 		});
 	}
@@ -263,36 +263,25 @@ public class LandManager {
 	/*
 	 * Permet de supprimer une territoire
 	 */
-	public CompletableFuture<Void> deleteLand(Player player, String name) {
-		return getPlayerLand(player, name).thenAcceptAsync(l -> {
-			if(l == null) {
-				player.sendMessage("§cVous n'avez pas de territoire à ce nom.");
+	public CompletableFuture<Void> deleteLand(Player player, Land land) {
+		return  future(() -> {
+			if(land == null) {
+				player.sendMessage("§cLe territoire n'a pas pu être trouvé.");
 			}
-			storage.deleteLand(l);
-			getChunks(l).forEach(schunk -> {
+			storage.deleteLand(land);
+			getChunks(land).forEach(schunk -> {
 				getChunks().remove(schunk);
 				chunksCache.invalidate(schunk);
 			});
-			getLands().remove(l.getId());
-			player.sendMessage("§cLe territoire au nom de " + name + " a bien été supprimée.");
-		});
-	}
-
-	/*
-	 * Permet de supprimer une territoire
-	 */
-	public CompletableFuture<Void> deleteSystemLand(Player player, String name) {
-		return getSystemLand(name).thenAcceptAsync(l -> {
-			if(l == null) {
-				player.sendMessage("§cIl n'y a pas de territoire à ce nom.");
+			
+			if(land.hasSubLand()) {
+				for(SubLand subland : land.getSubLands().values()) {
+					deleteLand(player, subland);
+				}
 			}
-			storage.deleteLand(l);
-			getChunks(l).forEach(schunk -> {
-				getChunks().remove(schunk);
-				chunksCache.invalidate(schunk);
-			});
-			getLands().remove(l.getId());
-			player.sendMessage("§cLe territoire au nom de " + name + " a bien été supprimée.");
+			
+			getLands().remove(land.getId());
+			player.sendMessage("§cLe territoire au nom de " + land.getName() + " a bien été supprimée.");
 		});
 	}
 
@@ -338,7 +327,6 @@ public class LandManager {
 		return future(() -> getMaxChunkCount(player) - getChunkCount(player).get());
 	}
 
-
 	/*
 	 * Retourne la liste des chunks d'un territoire.
 	 */
@@ -359,12 +347,9 @@ public class LandManager {
 		return chunks;
 	}
 
-
-
 	/*
 	 * TRUST / UNTRUST
 	 */
-
 
 	public void addTrust(Land land, UUID uuid, Action action) {
 		land.trust(uuid, action);
@@ -406,6 +391,16 @@ public class LandManager {
 		}
 		return chunksCache.get(schunk, land -> getChunks().getOrDefault(schunk, wilderness));
 	}
+	
+	public Land getLandAt(Location loc) {
+		Land land = getLandAt(loc.getChunk());
+		SubLand subLand = land.getSubLandAt(loc);
+		if(subLand != null) {
+			return subLand;
+		}else {
+			return land;
+		}
+	}
 
 
 
@@ -413,6 +408,9 @@ public class LandManager {
 		return future(() ->  getLandAt(chunk));
 	}
 
+	public CompletableFuture<Land> getLandAtAsync(Location loc) {
+		return future(() ->  getLandAt(loc));
+	}
 
 	/*
 	 * Ajouter un chunk à un territoire :
@@ -442,10 +440,10 @@ public class LandManager {
 			if(getLandAt(chunk).equals(wilderness)) {
 				claim(chunk, land);
 				if(verbose) {
-					player.sendActionBar("§a§lLe tronçon a bien été claim.");
+					player.sendActionBar(Component.text("§a§lLe tronçon a bien été claim."));
 				}
 			}else if(verbose){
-				player.sendActionBar("§c§lCe tronçon est déjà claim.");
+				player.sendActionBar(Component.text("§c§lCe tronçon est déjà claim."));
 			}
 		});
 	}
@@ -458,13 +456,13 @@ public class LandManager {
 				if(pland.getOwner().equals(player.getUniqueId()) || plugin.isBypassing(player)) {
 					unclaim(chunk);
 					if(verbose) {
-						player.sendActionBar("§a§lLe tronçon a bien été unclaim.");
+						player.sendActionBar(Component.text("§a§lLe tronçon a bien été unclaim."));
 					}
 				}else if(verbose){
-					player.sendActionBar("§c§lCe tronçon ne vous appartient pas !");
+					player.sendActionBar(Component.text("§c§lCe tronçon ne vous appartient pas !"));
 				}
 			}else if(verbose){
-				player.sendActionBar("§c§lImpossible d'unclaim ce tronçon.");
+				player.sendActionBar(Component.text("§c§lImpossible d'unclaim ce tronçon."));
 			}
 		});
 	}
@@ -474,14 +472,14 @@ public class LandManager {
 			Land l = getLandAt(chunk);
 			if(l == null) {
 				if(verbose)
-					player.sendActionBar("§c§lCe tronçon n'est pas claim !");
+					player.sendActionBar(Component.text("§c§lCe tronçon n'est pas claim !"));
 				return;
 			}
 
 			if(l.equals(land)) {
 				unclaim(player, chunk, true);
 			}else if(verbose){
-				player.sendActionBar("§c§lImpossible d'unclaim ce tronçon, il n'appartient pas au territoire " + land.getName());
+				player.sendActionBar(Component.text("§c§lImpossible d'unclaim ce tronçon, il n'appartient pas au territoire " + land.getName()));
 			}
 		});
 	}
@@ -577,6 +575,40 @@ public class LandManager {
 		land.removeLink(link);
 		future(() -> storage.removeLink(land, link));
 	}
+	
+	/*
+	 * SUBLANDS
+	 */
+	
+	public CompletableFuture<Void> createSublandAsync(Player player, Land superLand, String name) {
+		return future(() -> {
+			if(!superLand.getSubLands().isEmpty()) {
+				for(SubLand subland : superLand.getSubLands().values()) {
+					if(subland.getName().equals(name)) {
+						player.sendMessage("§cIl y a déjà un territoire à ce nom.");
+						return;
+					}
+				}
+			}
+			if(name.length() > 16) {
+				player.sendMessage("§cLe nom du territoire ne doit pas dépasser 16 caractères.");
+				return;
+			}
+			SubLand subLand = new SubLand(superLand, -1, name);
+			subLand.setCuboid(new Cuboid(Bukkit.getWorlds().get(1), 0, 0, 0, 0, 0, 0), "non défini");
+			storage.addLand(subLand);
+			subLand.setId(storage.getLastId(LandType.SUBLAND));
+			storage.setSubLandRegion(superLand, subLand);
+			superLand.setSubLands(storage.getSubLands(superLand));
+			player.sendMessage("§aLe sous-territoire au nom de " + name + " a été créée.");
+		});
+	}
+	
+	public CompletableFuture<Void> saveSubLandCuboid(SubLand subland) {
+		return future(() -> {
+			storage.setSubLandRegion(subland.getSuperLand(), subland);
+		});
+	}
 
 
 	public <T> CompletableFuture<T> future(Callable<T> supplier) {
@@ -608,6 +640,4 @@ public class LandManager {
 	public LandMap getLandMap() {
 		return landMap;
 	}
-
-
 }

@@ -8,11 +8,11 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 import fr.iban.bukkitcore.menu.Menu;
-import fr.iban.bukkitcore.utils.Head;
-import fr.iban.bukkitcore.utils.ItemBuilder;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.enums.Link;
 import fr.iban.lands.objects.Land;
+import fr.iban.lands.utils.Head;
+import fr.iban.lands.utils.ItemBuilder;
 import fr.iban.lands.utils.LandSelectCallback;
 
 public class LinkManageMenu extends Menu {
@@ -80,7 +80,6 @@ public class LinkManageMenu extends Menu {
 
 	@Override
 	public void setMenuItems() {
-
 		Land globalTrustLink = land.getLinkedLand(Link.GLOBALTRUST);
 		Land trustLink = land.getLinkedLand(Link.TRUSTS);
 		Land banLink = land.getLinkedLand(Link.BANS);

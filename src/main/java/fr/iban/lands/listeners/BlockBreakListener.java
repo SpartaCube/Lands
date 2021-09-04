@@ -3,7 +3,6 @@ package fr.iban.lands.listeners;
 import java.util.EnumSet;
 import java.util.Set;
 
-import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -37,8 +36,7 @@ public class BlockBreakListener implements Listener {
 	@EventHandler
 	public void onBreak(BlockBreakEvent e) {
 		Block block = e.getBlock();
-		Chunk chunk = block.getChunk();
-		Land land = landmanager.getLandAt(chunk);
+		Land land = landmanager.getLandAt(block.getLocation());
 
 		if(land == null) return;
 

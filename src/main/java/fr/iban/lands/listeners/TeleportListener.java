@@ -9,32 +9,41 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
+import fr.iban.lands.events.LandEnterEvent;
+import fr.iban.lands.objects.Land;
 
 public class TeleportListener implements Listener {
-	
-	private LandsPlugin plugin;
+
 	private LandManager manager;
+	private LandsPlugin plugin;
 
 	public TeleportListener(LandsPlugin plugin) {
 		this.manager = plugin.getLandManager();
 		this.plugin = plugin;
 	}
-	
-	
+
+
 	@EventHandler
 	public void onTeleport(PlayerTeleportEvent e) {
 		Location from = e.getFrom();
-		manager.getLandAtAsync(e.getTo().getChunk()).thenAccept(land -> {
+		Location to = e.getTo();
+		manager.future(() -> {
+			Land lfrom = manager.getLandAt(from);
+			Land lto = manager.getLandAt(to);
 			Player player = e.getPlayer();
-			if(land.isBanned(player.getUniqueId()) && !plugin.isBypassing(player) && !player.hasPermission("group.support")) {
-				Bukkit.getScheduler().runTask(plugin, () -> {
+
+			LandEnterEvent enter = new LandEnterEvent(player, lfrom, lto);
+			
+			Bukkit.getScheduler().runTask(plugin, () -> {
+				Bukkit.getPluginManager().callEvent(enter);
+				
+				if(enter.isCancelled()) {
 					player.teleportAsync(from);
-					player.sendMessage("§cVous ne pouvez pas entrer dans ce territoire, le propriétaire vous a banni.");
-				});
-				return;
-			}
+					return;
+				}
+			});
 		});
 	}
-	
+
 
 }

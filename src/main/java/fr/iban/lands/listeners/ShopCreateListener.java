@@ -1,6 +1,5 @@
 package fr.iban.lands.listeners;
 
-import org.bukkit.Chunk;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.maxgamer.quickshop.event.ShopPreCreateEvent;
@@ -20,8 +19,7 @@ public class ShopCreateListener implements Listener {
 	
 	@EventHandler
 	public void onShopCreate(ShopPreCreateEvent e) {
-		Chunk chunk = e.getLocation().getChunk();
-		Land land = landmanager.getLandAt(chunk);
+		Land land = landmanager.getLandAt(e.getLocation());
 		if(land == null)
 			return;
 		

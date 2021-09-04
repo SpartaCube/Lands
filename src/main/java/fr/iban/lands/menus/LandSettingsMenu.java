@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import fr.iban.lands.events.LandFlagChangeEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -12,13 +13,12 @@ import org.bukkit.inventory.ItemStack;
 
 import fr.iban.bukkitcore.CoreBukkitPlugin;
 import fr.iban.bukkitcore.menu.PaginatedMenu;
-import fr.iban.bukkitcore.utils.Head;
 import fr.iban.bukkitcore.utils.ItemBuilder;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
 import fr.iban.lands.enums.Flag;
-import fr.iban.lands.enums.LandType;
 import fr.iban.lands.objects.Land;
+import fr.iban.lands.utils.Head;
 
 public class LandSettingsMenu extends PaginatedMenu{
 
@@ -31,7 +31,7 @@ public class LandSettingsMenu extends PaginatedMenu{
 		super(player);
 		this.land = land;
 		this.manager = manager;
-		if(land.getType() == LandType.SYSTEM) {
+		if(player.hasPermission("lands.systemflags")) {
 			flags = Arrays.stream(Flag.values()).collect(Collectors.toList());
 		}else {
 			flags = Arrays.stream(Flag.values()).filter(flag -> !flag.isSystem()).collect(Collectors.toList());
@@ -69,9 +69,19 @@ public class LandSettingsMenu extends PaginatedMenu{
 		}
 		
 		if(item.getItemMeta().getDisplayName().startsWith("§4")) {
-			manager.addFlag(land, Flag.getByDisplayName(item.getItemMeta().getDisplayName()));
+			Flag flag = Flag.getByDisplayName(item.getItemMeta().getDisplayName());
+			LandFlagChangeEvent event = new LandFlagChangeEvent(player, land, flag, true);
+			Bukkit.getPluginManager().callEvent(event);
+			if(!event.isCancelled()){
+				manager.addFlag(land, flag);
+			}
 		}else {
-			manager.removeFlag(land, Flag.getByDisplayName(item.getItemMeta().getDisplayName()));
+			Flag flag = Flag.getByDisplayName(item.getItemMeta().getDisplayName());
+			LandFlagChangeEvent event = new LandFlagChangeEvent(player, land, flag, false);
+			Bukkit.getPluginManager().callEvent(event);
+			if(!event.isCancelled()){
+				manager.removeFlag(land, flag);
+			}
 		}
 		
 		if(displayNameEquals(item, "§2Liens")) {

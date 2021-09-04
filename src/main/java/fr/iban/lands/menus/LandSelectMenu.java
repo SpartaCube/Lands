@@ -8,9 +8,9 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 import fr.iban.bukkitcore.menu.PaginatedMenu;
-import fr.iban.bukkitcore.utils.Head;
 import fr.iban.bukkitcore.utils.ItemBuilder;
 import fr.iban.lands.objects.Land;
+import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.LandSelectCallback;
 
 public class LandSelectMenu extends PaginatedMenu {

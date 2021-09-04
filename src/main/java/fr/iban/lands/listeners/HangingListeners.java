@@ -1,6 +1,5 @@
 package fr.iban.lands.listeners;
 
-import org.bukkit.Chunk;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -25,13 +24,12 @@ public class HangingListeners implements Listener {
 
 	@EventHandler
 	public void onHangingBreak(HangingBreakByEntityEvent e) {	
-		Chunk chunk = e.getEntity().getChunk();
 		
 		Player player = getPlayerRemover(e);
 		
 		if(player != null) {			
 			
-			Land land = landmanager.getLandAt(chunk);
+			Land land = landmanager.getLandAt(e.getEntity().getLocation());
 
 			if(land != null) {
 				if(land.isBypassing(player, Action.BLOCK_BREAK)) {
@@ -45,9 +43,8 @@ public class HangingListeners implements Listener {
 
 	@EventHandler
 	public void onHangingBreak(HangingPlaceEvent e) {	
-		Chunk chunk = e.getEntity().getChunk();
 		Player player = e.getPlayer();
-		Land land = landmanager.getLandAt(chunk);
+		Land land = landmanager.getLandAt(e.getEntity().getLocation());
 
 
 		if(land != null && !land.isBypassing(player, Action.BLOCK_PLACE)) {

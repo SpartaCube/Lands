@@ -1,7 +1,7 @@
 package fr.iban.lands.menus;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -16,42 +16,35 @@ import fr.iban.bukkitcore.menu.Menu;
 import fr.iban.bukkitcore.menu.PaginatedMenu;
 import fr.iban.lands.LandManager;
 import fr.iban.lands.LandsPlugin;
-import fr.iban.lands.enums.LandType;
 import fr.iban.lands.objects.Land;
+import fr.iban.lands.objects.SubLand;
 import fr.iban.lands.utils.Head;
 import fr.iban.lands.utils.ItemBuilder;
 
-public class LandMainMenu extends PaginatedMenu {
+public class SubLandMainMenu extends PaginatedMenu {
 
 	private LandManager manager;
-	private List<Land> lands;
+	private List<SubLand> lands;
 	private LandsPlugin plugin;
 	private Menu previousMenu;
-	private LandType landType;
+	private Land superLand;
 
-	public LandMainMenu(Player player, LandsPlugin plugin, List<Land> lands, LandType landType) {
+	public SubLandMainMenu(Player player, LandsPlugin plugin, List<SubLand> lands, Land superLand) {
 		super(player);
 		this.manager = plugin.getLandManager();
 		this.lands = lands;
 		this.plugin = plugin;
-		this.landType = landType;
+		this.superLand = superLand;
 	}
 	
-	public LandMainMenu(Player player, LandsPlugin plugin, List<Land> lands, LandType landType, Menu previousMenu) {
-		this(player, plugin, lands, landType);
+	public SubLandMainMenu(Player player, LandsPlugin plugin, List<SubLand> lands, Land superLand, Menu previousMenu) {
+		this(player, plugin, lands, superLand);
 		this.previousMenu = previousMenu;
 	}
 
 	@Override
 	public String getMenuName() {
-		switch (landType) {
-		case SYSTEM:
-			return "§2§lTerritoires système:";
-		case SUBLAND:
-			return "§2§lSous-territoires :";
-		default:
-			return "§2§lVos territoires :";
-		}
+		return "§2§lSous-territoires de " + superLand.getName();
 	}
 
 	@Override
@@ -84,23 +77,11 @@ public class LandMainMenu extends PaginatedMenu {
 			player.closeInventory();
 			player.sendMessage("§2§lVeuillez entrer le nom du territoire souhaité :");
 			core.getTextInputs().put(player.getUniqueId(), texte -> {
-				switch (landType) {
-				case PLAYER:
-					manager.createLand(player, texte).thenAccept(land -> 
+				manager.createSublandAsync(player, superLand, texte).thenRun(() -> {
 					Bukkit.getScheduler().runTask(plugin, () -> {
-						lands.add(land);
-						open();
-					}));
-					break;
-				case SYSTEM:
-					manager.createSystemLand(player, texte).thenAccept(land -> 
-					Bukkit.getScheduler().runTask(plugin, () -> {
-						lands.add(land);
-						open();
-					}));
-				default:
-					break;
-				}
+						new SubLandMainMenu(player, plugin, superLand.getSubLands().values().stream().collect(Collectors.toList()), superLand, previousMenu).open();
+					});
+				});
 				core.getTextInputs().remove(player.getUniqueId());
 			});
 		}
@@ -118,7 +99,6 @@ public class LandMainMenu extends PaginatedMenu {
 					if(result) {
 						manager.deleteLand(player, land);
 						lands.remove(land);
-
 					}
 					super.open();
 				}).open();
@@ -145,13 +125,6 @@ public class LandMainMenu extends PaginatedMenu {
 			}
 		}
 
-		if(landType == LandType.PLAYER) {
-			inventory.setItem(27, new ItemBuilder(Head.OAK_INFO.get()).setName("§2Informations").addLore("§cChargement...").build());
-			getInfoItem().thenAccept(item -> {
-				inventory.setItem(27, item);
-			});
-		}
-		
 		if(previousMenu != null) {
 			inventory.setItem(31, new ItemBuilder(Material.RED_STAINED_GLASS_PANE).setDisplayName("§4Retour")
 					.addLore("§cRetourner au menu précédent")
@@ -180,12 +153,6 @@ public class LandMainMenu extends PaginatedMenu {
 			}
 		}
 		return null;
-	}
-
-	private CompletableFuture<ItemStack> getInfoItem(){
-		return manager.future(() -> {
-			return new ItemBuilder(Head.OAK_INFO.get()).setName("§2Informations").addLore("§f§lVos tronçons : §a" + manager.getChunkCount(player).get() + "/" + manager.getMaxChunkCount(player)).build();
-		});
 	}
 
 }

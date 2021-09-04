@@ -1,6 +1,5 @@
 package fr.iban.lands.listeners;
 
-import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -24,8 +23,7 @@ public class CommandListener implements Listener {
 		Player player = e.getPlayer();
 
 		if(e.getMessage().toLowerCase().contains("sethome")) {
-			Chunk chunk = player.getLocation().getChunk();
-			Land land = landmanager.getLandAt(chunk);
+			Land land = landmanager.getLandAt(player.getLocation());
 			if(land == null)
 				return;
 			

@@ -2,7 +2,6 @@ package fr.iban.lands.listeners;
 
 import java.util.Iterator;
 
-import org.bukkit.Chunk;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Player;
@@ -32,8 +31,7 @@ public class EntityExplodeListener implements Listener {
 
 		while(it.hasNext()) {
 			Block block = it.next();
-			Chunk chunk = block.getChunk();
-			Land land = landmanager.getLandAt(chunk);
+			Land land = landmanager.getLandAt(block.getLocation());
 
 			if(player != null) {
 				if(land.isBypassing(player, Action.BLOCK_BREAK)) {
