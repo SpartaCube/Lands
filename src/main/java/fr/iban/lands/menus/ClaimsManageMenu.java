@@ -1,5 +1,6 @@
 package fr.iban.lands.menus;
 
+import fr.iban.lands.objects.SChunk;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -47,9 +48,9 @@ public class ClaimsManageMenu extends PaginatedMenu {
 
 		if(displayNameEquals(item, "§2Tronçon")) {
 			if(clic == ClickType.LEFT) {
-					manager.claim(player, player.getChunk(), land, true);
+					manager.claim(player, new SChunk(player.getChunk()), land, true);
 			}else if(clic == ClickType.RIGHT) {
-				manager.unclaim(player, player.getChunk(), land, true);
+				manager.unclaim(player, new SChunk(player.getChunk()), land, true);
 			}
 		}else if(displayNameEquals(item, "§2Selection")) {
 			player.sendMessage("§2§lDébut de la sélection de la zone.");

@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import fr.iban.bukkitcore.CoreBukkitPlugin;
+import fr.iban.lands.objects.SChunk;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -67,18 +69,18 @@ public class LandCMD implements CommandExecutor, TabCompleter {
 		switch (args[0].toLowerCase()) {
 		case "claim":
 			if(args.length == 1) {
-				landManager.getPlayerFirstLand(player).thenAccept(land -> landManager.claim(player, player.getLocation().getChunk(), land, true));
+				landManager.getPlayerFirstLand(player).thenAccept(land -> landManager.claim(player, new SChunk(player.getLocation().getChunk()), land, true));
 			}else if(args.length == 2) {
 				String landName = args[1];
-				landManager.getPlayerLand(player, landName).thenAccept(land -> landManager.claim(player, player.getLocation().getChunk(), land, true));
+				landManager.getPlayerLand(player, landName).thenAccept(land -> landManager.claim(player, new SChunk(player.getLocation().getChunk()), land, true));
 			}
 			break;
 		case "unclaim":
 			if(args.length == 1) {
-				landManager.unclaim(player, player.getLocation().getChunk(), true);
+				landManager.unclaim(player, new SChunk(player.getLocation().getChunk()), true);
 			}else if(args.length == 2) {
 				String landName = args[1];
-				landManager.getPlayerLand(player, landName).thenAccept(land -> landManager.unclaim(player, player.getLocation().getChunk(), land, true));
+				landManager.getPlayerLand(player, landName).thenAccept(land -> landManager.unclaim(player, new SChunk(player.getLocation().getChunk()), land, true));
 			}
 			break;
 		case "forceunclaim":
@@ -138,7 +140,7 @@ public class LandCMD implements CommandExecutor, TabCompleter {
 							World world = Bukkit.getWorld(args[1]);
 							int X = Integer.parseInt(args[2]);
 							int Z = Integer.parseInt(args[3]);
-							landManager.claim(player, world.getChunkAt(X,Z), land, true).thenRun(() -> Bukkit.getScheduler().runTask(plugin, () -> {
+							landManager.claim(player, new SChunk(CoreBukkitPlugin.getInstance().getServerName(), world.getName(), X, Z), land, true).thenRun(() -> Bukkit.getScheduler().runTask(plugin, () -> {
 								map.display(player, land);
 							}));
 						}
@@ -157,12 +159,12 @@ public class LandCMD implements CommandExecutor, TabCompleter {
 							int X = Integer.parseInt(args[2]);
 							int Z = Integer.parseInt(args[3]);
 							if(land instanceof PlayerLand) {
-								landManager.unclaim(player, world.getChunkAt(X,Z), land, true);
+								landManager.unclaim(player, new SChunk(CoreBukkitPlugin.getInstance().getServerName(), world.getName(), X, Z), land, true);
 							}else if(land instanceof SystemLand && player.hasPermission("lands.admin")) {
 								landManager.unclaim(world.getChunkAt(X,Z));
 							}
 							player.sendActionBar("§a§lLe tronçon a bien été unclaim.");
-							landManager.unclaim(player, world.getChunkAt(X,Z), land, true).thenRun(() -> Bukkit.getScheduler().runTask(plugin, () -> {
+							landManager.unclaim(player, new SChunk(CoreBukkitPlugin.getInstance().getServerName(), world.getName(), X, Z), land, true).thenRun(() -> Bukkit.getScheduler().runTask(plugin, () -> {
 								map.display(player, land);
 							}));
 						}

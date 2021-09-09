@@ -71,17 +71,14 @@ public class AreaSelector {
 				Cuboid cuboid = getCuboid();
 				verif(cuboid, true).thenAcceptAsync(valid -> {
 					if(valid.booleanValue()) {
-						for(Chunk chunk : getCuboid().getChunks()) {
-							manager.claim(player, chunk, land, false);
-						}
-						player.sendMessage("§a§lLa selection a été claim avec succès.");
+						manager.claim(cuboid.getSChunks(), land, player);
 					}
 				});
 			}else if(texte.equalsIgnoreCase("unclaim")){
 				Cuboid cuboid = getCuboid();
 				verif(cuboid, false).thenAcceptAsync(valid -> {
 					if(valid.booleanValue()) {
-						for(Chunk chunk : getCuboid().getChunks()) {
+						for(SChunk chunk : getCuboid().getSChunks()) {
 							manager.unclaim(player, chunk, land, false);
 						}
 						player.sendMessage("§aLa selection a été unclaim avec succès.");
