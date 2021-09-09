@@ -2,6 +2,7 @@ package fr.iban.lands.utils;
 
 import java.util.concurrent.CompletableFuture;
 
+import fr.iban.lands.objects.SChunk;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -161,7 +162,10 @@ public class AreaSelector {
 			}
 			int unclaimCount = 0;
 			int claimCount = 0;
-			for(Chunk chunk : cuboid.getChunks()) {
+			if(cuboid.getSizeX() > 3000 || cuboid.getSizeZ() > 3000){
+				player.sendMessage("§c§lLa selection est trop grande !");
+			}
+			for(SChunk chunk : cuboid.getSChunks()) {
 				Land chunkLand = manager.getLandAt(chunk);
 				if(!chunkLand.isWilderness()) {
 					if(!manager.getLandAt(chunk).equals(land)) {
