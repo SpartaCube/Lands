@@ -38,6 +38,7 @@ import fr.iban.lands.storage.AbstractStorage;
 import fr.iban.lands.utils.Cuboid;
 import fr.iban.lands.utils.LandMap;
 import net.kyori.adventure.text.Component;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class LandManager {
 
@@ -421,11 +422,7 @@ public class LandManager {
 		future(() -> storage.setChunk(land, chunk));
 	}
 
-	public void claim(Chunk chunk, Land land) {
-		claim(new SChunk(chunk), land);
-	}
-
-	public CompletableFuture<Void> claim(Player player, Chunk chunk, Land land, boolean verbose) {
+	public CompletableFuture<Void> claim(Player player, SChunk chunk, Land land, boolean verbose) {
 		return future(() ->  {
 			try {
 				if(getRemainingChunkCount(player).get() < 1) {
@@ -448,7 +445,29 @@ public class LandManager {
 		});
 	}
 
-	public CompletableFuture<Void> unclaim(Player player, Chunk chunk, boolean verbose) {
+	public void claim(List<SChunk> chunks, Land land, Player player){
+			int TTChunks = chunks.size();
+			new BukkitRunnable(){
+
+				@Override
+				public void run() {
+					if(!chunks.isEmpty()){
+						claim(player, chunks.get(0), land, false);
+						chunks.remove(0);
+						if(chunks.size() % 50 == 0) {
+							int loadedChunks = TTChunks - chunks.size();
+							player.sendMessage("§aProtection des chunks... (" + loadedChunks + "/" + TTChunks + ") ["
+									+ Math.round(loadedChunks * 100.0F / (TTChunks / 1.0F) * 10.0F) / 10.0F + "%]");
+						}
+					}else{
+						player.sendMessage("§a§lLa selection a été protégée avec succès.");
+						cancel();
+					}
+				}
+			}.runTaskTimerAsynchronously(plugin, 0L, 1L);
+	}
+
+	public CompletableFuture<Void> unclaim(Player player, SChunk chunk, boolean verbose) {
 		return future(() -> {
 			Land land = getLandAt(chunk);
 			if(land instanceof PlayerLand) {
@@ -467,7 +486,7 @@ public class LandManager {
 		});
 	}
 
-	public CompletableFuture<Void> unclaim(Player player, Chunk chunk, Land land, boolean verbose) {
+	public CompletableFuture<Void> unclaim(Player player, SChunk chunk, Land land, boolean verbose) {
 		return future(() -> {
 			Land l = getLandAt(chunk);
 			if(l == null) {
