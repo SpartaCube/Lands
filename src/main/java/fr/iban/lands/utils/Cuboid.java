@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import fr.iban.bukkitcore.CoreBukkitPlugin;
+import fr.iban.lands.objects.SChunk;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -570,6 +572,22 @@ public class Cuboid implements Iterable<Block>, Cloneable, ConfigurationSerializ
 		for (int x = x1; x <= x2; x += 16) {
 			for (int z = z1; z <= z2; z += 16) {
 				res.add(w.getChunkAt(x >> 4, z >> 4));
+			}
+		}
+		return res;
+	}
+
+	public List<SChunk> getSChunks() {
+		List<SChunk> res = new ArrayList<>();
+
+		World w = this.getWorld();
+		int x1 = this.getLowerX() & ~0xf;
+		int x2 = this.getUpperX() & ~0xf;
+		int z1 = this.getLowerZ() & ~0xf;
+		int z2 = this.getUpperZ() & ~0xf;
+		for (int x = x1; x <= x2; x += 16) {
+			for (int z = z1; z <= z2; z += 16) {
+				res.add(new SChunk(CoreBukkitPlugin.getInstance().getServerName(), w.getName(), x >> 4, z >> 4));
 			}
 		}
 		return res;

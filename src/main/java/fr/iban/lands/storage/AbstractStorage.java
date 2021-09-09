@@ -78,5 +78,4 @@ public interface AbstractStorage {
 
 	int getLastId(LandType type);
 
-	
 }
