@@ -43,8 +43,8 @@ public class DamageListeners implements Listener {
 				e.setCancelled(true);
 				return;
 			}
-			if(land.hasFlag(Flag.PVP)) {
-				e.setCancelled(false);
+			if(!land.hasFlag(Flag.PVP)) {
+				e.setCancelled(true);
 				return;
 			}
 		}

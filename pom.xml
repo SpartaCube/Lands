@@ -81,8 +81,8 @@
 			<scope>provided</scope>
 		</dependency>
  		<dependency>
-			<groupId>fr.iban.spartacube</groupId>
-			<artifactId>Core-paper</artifactId>
+			<groupId>fr.iban</groupId>
+			<artifactId>CorePaper</artifactId>
 			<version>1.0</version>
 			<scope>provided</scope>
 		</dependency>

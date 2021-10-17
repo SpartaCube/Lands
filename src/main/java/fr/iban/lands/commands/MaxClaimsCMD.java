@@ -1,5 +1,6 @@
 package fr.iban.lands.commands;
 
+import fr.iban.common.data.Account;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -7,7 +8,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
 import fr.iban.common.data.AccountProvider;
-import fr.iban.spartacube.data.Account;
 
 public class MaxClaimsCMD implements CommandExecutor {
 
